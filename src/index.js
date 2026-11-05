@@ -38,7 +38,7 @@ async function rankings(db, query) {
       !['best','all'].includes(view)) return fail('올바르지 않은 랭킹 조건입니다.');
   if (!(await visibleGame(db,game))) return fail('비공개 게임입니다.',404);
   const cutoff = period === 'today' || mode === 'daily' ? kstStartUtc() : '1970-01-01T00:00:00.000Z';
-  const select = 'SELECT s.player_id, COALESCE(s.nickname, p.nickname) AS nickname, s.score, s.floors, s.created_at FROM scores s JOIN players p ON p.id = s.player_id WHERE s.game_id = ? AND s.mode = ? AND s.created_at >= ?';
+  const select = 'SELECT s.player_id, COALESCE(s.nickname, p.nickname) AS nickname, s.score, s.floors, s.created_at FROM scores s JOIN players p ON p.id = s.player_id WHERE s.game_id = ? AND s.mode = ? AND s.created_at >= ? AND (s.game_id <> \'ai-jump\' OR s.rules_version = 2)';
   const sql = view === 'all'
     ? 'SELECT nickname,score,floors,created_at FROM ('+select+') ORDER BY score DESC, floors DESC, created_at ASC LIMIT 10'
     : 'WITH records AS ('+select+'), ranked AS (SELECT player_id,nickname,score,floors,created_at,ROW_NUMBER() OVER (PARTITION BY player_id ORDER BY score DESC, floors DESC, created_at ASC) AS rn FROM records) SELECT nickname,score,floors,created_at FROM ranked WHERE rn=1 ORDER BY score DESC, floors DESC, created_at ASC LIMIT 10';
@@ -86,7 +86,7 @@ async function api(req, env) {
     const count = await env.DB.prepare('SELECT COUNT(*) AS n FROM game_sessions WHERE player_id = ? AND started_at > ?').bind(player.id, Date.now() - 60000).first();
     if ((count?.n || 0) >= 10) return fail('잠시 후 다시 시도해주세요.', 429);
     const id = uid(), started = Date.now();
-    await env.DB.prepare('INSERT INTO game_sessions (id, player_id, game_id, mode, started_at) VALUES (?, ?, ?, ?, ?)').bind(id, player.id, game, mode, started).run();
+    await env.DB.prepare('INSERT INTO game_sessions (id, player_id, game_id, mode, started_at, rules_version) VALUES (?, ?, ?, ?, ?, ?)').bind(id, player.id, game, mode, started, game==='ai-jump'?2:1).run();
     return reply({ sessionId: id, startedAt: started, expiresInSeconds: 3600 }, 201);
   }
   if (path === '/api/game/finish' && method === 'POST') {
@@ -111,6 +111,7 @@ async function api(req, env) {
       const matches=['score','floors','perfects','combo'].every(key=>Number.isSafeInteger(data[key])&&data[key]===expected[key]);
       result=matches?{ok:true,value:expected}:{ok:false,error:'서버에서 재현한 게임 점수와 제출 기록이 다릅니다.'};
     } else if(session.game_id==='ai-jump'){
+      if(session.rules_version!==2)return fail('이전 버전 게임입니다. 새 게임을 시작해주세요.',409);
       // Web client sends 3-bit packed controls (LEFT/RIGHT/JUMP) for each 40ms tick.
       // The deterministic engine reproduces physics, platform collisions, stars and score.
       // Real session time bounds the trace to prevent faster-than-real-time submissions.
@@ -134,8 +135,8 @@ async function api(req, env) {
     // 한 번 제출된 세션은 원자적으로 완료 처리하며 중복 요청을 방지합니다.
     const updated = await env.DB.prepare('UPDATE game_sessions SET finished_at = ? WHERE id = ? AND player_id = ? AND finished_at IS NULL').bind(Date.now(), session.id, player.id).run();
     if (updated.meta?.changes !== 1) return fail('이미 제출된 기록입니다.', 409);
-    await env.DB.prepare('INSERT INTO scores (id, session_id, player_id, game_id, mode, score, floors, perfects, combo, created_at, nickname) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      .bind(scoreId, session.id, player.id, session.game_id, session.mode, score, floors, perfects, combo, created, player.nickname).run();
+    await env.DB.prepare('INSERT INTO scores (id, session_id, player_id, game_id, mode, score, floors, perfects, combo, created_at, nickname, rules_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(scoreId, session.id, player.id, session.game_id, session.mode, score, floors, perfects, combo, created, player.nickname, session.rules_version).run();
     return reply({ ok: true, score: { id: scoreId, score, floors, created_at: created } }, 201);
   }
   if (path.startsWith('/api/admin/auth/')) return adminAuthRoute(req, env, path);

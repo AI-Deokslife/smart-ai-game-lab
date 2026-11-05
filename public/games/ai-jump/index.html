@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#161d45">
-<meta name="description" content="AI 네온 점프: A/D 이동과 스페이스 점프로 발판을 오르는 스마트AI과 캐주얼 액션 게임">
+<meta name="description" content="AI 네온 점프: 네온 도시를 달리며 발판 사이를 뛰어넘는 도트풍 횡스크롤 액션 게임">
 <title>AI 네온 점프 | SMART AI GAME LAB</title>
 <link rel="stylesheet" href="./styles.css">
 </head>
@@ -17,20 +17,20 @@
   <section class="game" aria-label="AI 네온 점프 플레이">
     <div class="hud" aria-live="polite">
       <div class="stat"><small>점수</small><strong id="hudScore">0</strong></div>
-      <div class="stat"><small>높이</small><strong id="hudFloors">0 F</strong></div>
+      <div class="stat"><small>거리</small><strong id="hudFloors">0 m</strong></div>
       <div class="stat"><small>스타</small><strong id="hudStars">0 ★</strong></div>
       <div class="stat time"><small>남은 시간</small><strong id="hudTime">60</strong></div>
     </div>
     <div class="stage-frame">
-      <canvas id="scene" width="800" height="1300" aria-label="발판을 점프하며 위로 올라가는 게임 화면"></canvas>
-      <div class="stage-top"><span id="modeLabel">자유 도전</span><span id="hearts" aria-label="남은 에너지">♥ ♥ ♥</span></div>
+      <canvas id="scene" width="1280" height="880" aria-label="네온 도시를 좌우로 달리며 발판과 장애물을 뛰어넘는 횡스크롤 게임 화면"></canvas>
+      <div class="stage-top"><span id="modeLabel">자유 도전</span><span id="stageLabel">STAGE 01</span><span id="hearts" aria-label="남은 에너지">♥ ♥ ♥</span></div>
       <div class="meter"><div id="timeMeter"></div></div>
       <div id="startOverlay" class="overlay">
         <div class="modal">
           <div class="logo" aria-hidden="true">✦</div>
-          <p class="overline">PIXEL PLATFORM ADVENTURE</p>
+          <p class="overline">NEON CITY · PIXEL RUN &amp; JUMP</p>
           <h1>AI <span>네온 점프!</span></h1>
-          <p class="subtitle">발판을 딛고 구름 위까지!<br>별을 모으고 최고 높이에 도전하세요.</p>
+          <p class="subtitle">빛나는 도시를 달리고, 틈새를 점프하세요!<br>2단 점프와 체크포인트로 더 멀리 도전!</p>
           <label for="nickname">플레이어 닉네임</label>
           <input id="nickname" maxlength="12" autocomplete="nickname" value="AI 점퍼">
           <label for="modeSelect">게임 모드</label>
@@ -39,13 +39,13 @@
             <option value="daily">오늘의 도전 · 60초</option>
           </select>
           <button class="primary" id="startBtn" type="button">게임 시작 <span>▶</span></button>
-          <p class="mini">PC: A / D 이동, SPACE 점프<br>모바일: 아래 방향·점프 버튼</p>
+          <p class="mini">PC: A / D 이동 · SPACE 2단 점프<br>모바일: 좌우 버튼 + 점프 연속 두 번</p>
           <p id="startMessage" class="feedback" role="status"></p>
         </div>
       </div>
       <div id="countOverlay" class="overlay countdown" hidden>
         <strong id="countNumber">3</strong>
-        <p>위로 점프할 준비!</p>
+        <p>네온 시티로 출발!</p>
       </div>
       <div id="pauseOverlay" class="overlay" hidden>
         <div class="modal">
@@ -62,7 +62,7 @@
           <h2>도전 결과</h2>
           <div id="resultScore" class="result-score">0점</div>
           <p id="resultReason" class="subtitle">멋진 점프였습니다.</p>
-          <p id="resultMeta" class="details">0층 · 별 0개 · 최고 콤보 0</p>
+          <p id="resultMeta" class="details">거리 0m · 별 0개 · 연속 착지 0</p>
           <p id="onlineMessage" class="feedback" role="status"></p>
           <button class="primary" id="againBtn" type="button">다시 도전 ↻</button>
           <a href="/" class="secondary linkbtn">게임 포털로</a>
@@ -75,19 +75,19 @@
       <button id="rightBtn" class="control side" type="button" aria-label="오른쪽 이동 D키">▶ <small>D</small></button>
     </div>
     <div class="under-controls">
-      <span>높이 올라갈수록 카메라가 따라옵니다.</span>
+      <span>길을 따라 오른쪽으로 달리세요! SPACE를 두 번 누르면 2단 점프</span>
       <div><button id="pauseBtn" class="small-btn" type="button">Ⅱ 일시정지</button><button id="soundBtn" class="small-btn" type="button">♪ 소리 켜짐</button></div>
     </div>
   </section>
   <aside class="sidebar">
     <span class="eyebrow">SMART AI · ARCADE 04</span>
-    <h2>한 번 더!<br><em>더 높이!</em></h2>
-    <p class="intro">좌우로 달리고, 타이밍에 맞춰 점프하세요. 움직이는 발판과 부서지는 발판을 넘어 별을 모으는 세로형 플랫폼 액션 게임입니다.</p>
+    <h2>빛나는 도시를<br><em>끝까지 달려라!</em></h2>
+    <p class="intro">화려한 네온 도시의 옥상을 달리는 횡스크롤 액션! 발판 사이의 틈새를 뛰어넘고, 드론을 피하고, 2단 점프로 별을 모아 더 멀리 나아가세요.</p>
     <section class="card">
       <h3>나의 최고 기록</h3>
       <div class="records">
         <div><strong id="localHigh">0</strong><small>이 기기 최고 점수</small></div>
-        <div><strong id="localFloor">0</strong><small>가장 높이 오른 층</small></div>
+        <div><strong id="localFloor">0</strong><small>최고 이동 거리(m)</small></div>
       </div>
     </section>
     <section class="card">
@@ -104,14 +104,14 @@
       <p class="mini">온라인 기록이 높은 순서로 최대 10위까지 표시됩니다.</p>
     </section>
     <section class="card">
-      <h3>발판 도감</h3>
+      <h3>네온 시티 공략법</h3>
       <div class="legend">
         <div><span class="sample solid"></span><strong>기본 발판</strong><small>안정적으로 착지</small></div>
         <div><span class="sample moving"></span><strong>움직이는 발판</strong><small>좌우로 이동</small></div>
         <div><span class="sample fragile"></span><strong>부서지는 발판</strong><small>착지하면 곧 사라짐</small></div>
         <div><span class="sample spring"></span><strong>점프 발판</strong><small>높이 튀어 오름</small></div>
       </div>
-      <p class="mini">황금별 ★을 모으면 추가 점수! 빨간 드론을 피하세요. 에너지 3칸이 모두 없어지면 게임 종료입니다.</p>
+      <p class="mini">점프 버튼을 공중에서 한 번 더 눌러 2단 점프! 노란별은 보너스, 붉은 드론은 위험합니다. 7개 구간마다 체크포인트가 있으며 에너지 3칸을 모두 잃으면 종료됩니다. 시즌 2 랭킹은 새 횡스크롤 규칙 기준입니다.</p>
     </section>
     <p class="footer">은평메디텍고등학교 <b>스마트AI과</b><br>SMART AI GAME LAB</p>
   </aside>
