@@ -9,7 +9,7 @@ import { validateRushResult, rushScore } from '../src/validation.js';
 
 function fixture(){
   const raw=new DatabaseSync(':memory:');
-  for(const name of ['0001_init.sql','0002_admin_login.sql','0003_game_catalog.sql'])
+  for(const name of ['0001_init.sql','0002_admin_login.sql','0003_game_catalog.sql','0004_score_nickname_snapshot.sql'])
     raw.exec(readFileSync(new URL('../migrations/'+name,import.meta.url),'utf8'));
   const DB={raw,prepare(sql){
     let params=[];
