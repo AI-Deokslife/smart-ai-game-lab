@@ -50,6 +50,30 @@ test('오르기 버튼은 방향 유지, 방향 전환은 반대로 회전하면
   sandbox.anim=0;sandbox.act('climb');assert.equal(sandbox.steps,3);assert.equal(sandbox.heading,-1);
   sandbox.anim=0;sandbox.act('climb');assert.equal(sandbox.steps,3);assert.match(sandbox.lastError,/계단/);
 });
+test('로봇은 좌우 이동 방향에 따라 실제로 다른 쪽을 바라본다',()=>{
+  const snippet=scripts[0].match(/function robot\(x,y,angle,facing=1\)\{[\s\S]*?\n\}(?=\nfunction draw)/)?.[0];
+  assert.ok(snippet,'방향 인수가 있는 로봇 그리기 함수를 찾지 못했습니다');
+  assert.match(scripts[0],/robot\(playerX,playerY,[^\n]+,heading\)/);
+  assert.match(snippet,/ctx\.scale\(facing<0\?-1:1,1\)/);
+  const scales=[];
+  const drawingContext=new Proxy({}, {
+    get(_target,key){
+      if(key==='scale')return (...args)=>scales.push(args);
+      return ()=>{};
+    },
+    set(){return true;}
+  });
+  const sandbox=createContext({ctx:drawingContext,Math});
+  new Script(snippet).runInContext(sandbox);
+  sandbox.robot(100,200,0,1);
+  sandbox.robot(100,200,0,-1);
+  assert.deepEqual(Array.from(scales[0]),[1,1]);
+  assert.deepEqual(Array.from(scales[1]),[-1,1]);
+  // 한쪽만 보이는 눈과 앞으로 튀어나온 얼굴을 그려 단순한 대칭 반전에 그치지 않아야 합니다.
+  assert.match(snippet,/roundRect\(18,-88,21,24,6\)/);
+  assert.match(snippet,/roundRect\(10,-87,11,14,4\)/);
+});
+
 test('AI 러시 인라인 게임 스크립트 문법과 외부 리소스 의존성 검사',()=>{
   assert.equal(scripts.length,1);
   for(const source of scripts)new Script(source,{filename:'ai-rush/index.html'});
