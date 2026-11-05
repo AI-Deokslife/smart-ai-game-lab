@@ -6,13 +6,15 @@
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": [
+      "/api/*"
+    ]
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "smart-ai-game-lab",
-      "database_id": "00000000-0000-4000-8000-000000000000",
+      "database_id": "bad4186e-7f7d-4408-98cc-0591337cf836",
       "migrations_dir": "migrations"
     }
   ]
