@@ -17,10 +17,10 @@
 - 게임 1: `public/games/ai-tower/index.html` (AI 타워 챌린지)
 - 게임 2: `public/games/ai-rush/index.html` (AI 러시, A/D·모바일 터치, 자유/일일 도전)
 - 게임 3: `public/games/ai-merge/index.html` (AI 몬스터 합체, 5×7 로봇 합체 퍼즐, 오프라인 연습·오늘의 퍼즐·공통 온라인 랭킹)
-- 게임 4: `public/games/ai-jump/index.html` (AI 네온 점프, 발판 점프 액션, 클래식 5분/오늘의 60초, TOP10 랭킹)
+- 게임 4: `public/games/ai-jump/index.html` (AI 네온 점프 시즌 2, 네온 도시 횡스크롤 도트 플랫폼 액션, 2단 점프·체크포인트·TOP10 랭킹)
 - 모든 게임이 사용할 SDK: `public/shared/lab-sdk.js`
 - API: `src/index.js` (Cloudflare Workers)
-- DB: `migrations/0001_init.sql`(기록), `0002_admin_login.sql`(관리자), `0003_game_catalog.sql`(게임 관리), `0004_score_nickname_snapshot.sql`(닉네임 보존), `0005_publish_ai_merge.sql`(3번째 게임 공개), `0006_publish_ai_jump.sql`(4번째 게임 공개)
+- DB: `migrations/0001_init.sql`(기록), `0002_admin_login.sql`(관리자), `0003_game_catalog.sql`(게임 관리), `0004_score_nickname_snapshot.sql`(닉네임 보존), `0005_publish_ai_merge.sql`(3번째 게임 공개), `0006_publish_ai_jump.sql`(4번째 게임 공개), `0007_jump_side_scroll_season.sql`(횡스크롤 시즌 2 점수 분리)
 - 관리자: `public/admin/index.html` (통계·기록 관리·게임 등록·공개 상태·순서 변경)
 - 닉네임 기반 **익명 참여** (학교/실명/연락처 수집 안 함)
 
@@ -155,6 +155,18 @@ AI 러시는 세로로 이어진 계단 경로를 따라 오르는 게임입니�
 - **점수 이름 고정**: 신규 점수에는 당시 닉네임이 함께 저장되므로 이후 참가자 이름이 바뀌어도 기록 당시 이름을 유지합니다.
 - **기존 데이터 보존**: `migrations/0004_score_nickname_snapshot.sql`은 이전 점수에 현재 DB의 닉네임을 넣고 기록 자체는 유지합니다. 과거에 덮어쓴 원래 닉네임은 이전 시스템에서 저장하지 않았기 때문에 재구성할 수 없습니다.
 - 닉네임은 본인 인증 수단이 아닙니다. **공용 PC에서 브라우저를 공동 사용하면 저장된 프로필도 공유될 수 있습니다.** 익명 학습 게임 운영용이며, 대회 보상이나 공식 참가자 구분에는 별도의 인증이 필요합니다.
+
+## AI 네온 점프 — 시즌 2 횡스크롤 리디자인
+
+- 게임 주소: https://smart-ai-game-lab.deok.workers.dev/games/ai-jump/
+- 초기 시안의 **네온 픽셀 도시 위를 달리는 가로형 플랫폼 액션**으로 재설계. 기존 세로 상승 플랫폼 게임과 규칙 자체가 다릅니다.
+- 네온 야경, 달, 이중 패럴랙스 도시, 반짝이는 청록 발판, 별, 드론, 큰 측면 로봇을 로컬 Canvas로 직접 그립니다. 외부 이미지/폰트 다운로드 없음.
+- PC: A/D 또는 ←→ 이동, SPACE/↑ 점프. 공중에서 두 번째로 누르면 2단 점프. 모바일: 세 버튼 동시 멀티터치.
+- 점프 발판, 이동 발판, 무너지는 발판, 7구간마다 체크포인트, 체력 3칸 후 재도전.
+- 25fps 고정 엔진의 3bit 조작 기록을 서버에서 재생해 점수를 검증합니다. 자유 도전 5분 / 오늘의 도전 60초.
+- 점수 계산: **거리 구간 100점 + 별 75점 + 연속 착지 보너스 25점**.
+- 기존 시즌 1 세로 점프 점수는 DB에 **그대로 보존**합니다. 시즌 2 기록만 새 TOP 10 랭킹에 반영합니다.
+- 신규 migration 0007은 game_sessions/scores의 rules_version 기본값을 1로 지정하고 신규 ai-jump 세션만 버전 2로 기록합니다. 원격 배포 전에 D1 migration을 적용합니다.
 
 ## AI 몬스터 합체 도트풍 타이틀 화면
 
