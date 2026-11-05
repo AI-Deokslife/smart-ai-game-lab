@@ -4,6 +4,12 @@ import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import worker from '../src/index.js';
 
+test('암호화 반복 횟수는 Cloudflare Workers PBKDF2 최대 10만 회를 초과하지 않는다',()=>{
+  const source=readFileSync(new URL('../src/admin-auth.js',import.meta.url),'utf8');
+  const rounds=Number(source.match(/const ROUNDS = (\d+);/)?.[1]);
+  assert.ok(Number.isSafeInteger(rounds) && rounds >= 10000 && rounds <= 100000);
+});
+
 function envFixture() {
   const sqlite = new DatabaseSync(':memory:');
   for (const filename of ['0001_init.sql','0002_admin_login.sql'])
