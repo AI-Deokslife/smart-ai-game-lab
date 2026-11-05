@@ -3,57 +3,109 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#0c1227">
-  <meta name="description" content="은평메디텍고등학교 스마트AI과의 모바일 게임 놀이터. 게임하고, 기록을 세우고, AI로 만드는 즐거움을 만나보세요.">
-  <title>SMART AI GAME LAB | 스마트AI과 게임 놀이터</title>
+  <meta name="theme-color" content="#1956ab">
+  <meta name="description" content="은평메디텍고등학교 스마트AI과 SMART AI GAME LAB. 도트풍 게임 연구소에서 AI 타워, AI 러시, AI 몬스터 합체를 즐기고 온라인 TOP 10 기록에 도전하세요.">
+  <meta property="og:title" content="SMART AI GAME LAB | 스마트AI과 게임 놀이터">
+  <meta property="og:description" content="AI로 만들고, 친구들과 플레이하자! 스마트AI과 도트 아케이드 게임 연구소">
+  <title>SMART AI GAME LAB | 스마트AI과 도트 게임 연구소</title>
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/pixel-portal.css">
 </head>
-<body>
-  <div class="halo halo-left"></div><div class="halo halo-right"></div>
+<body class="pixel-portal">
+  <a class="skip-link" href="#games">게임 목록 바로가기</a>
   <header class="site-header">
     <a class="identity" href="/" aria-label="SMART AI GAME LAB 홈">
-      <span class="identity-icon">AI</span>
+      <span class="identity-icon" aria-hidden="true">AI</span>
       <span><strong>SMART AI</strong><small>GAME LAB</small></span>
     </a>
-    <nav class="top-nav" aria-label="메뉴"><a href="#games">게임</a><a href="#ranking">랭킹</a><a href="#about">제작 이야기</a></nav>
+    <nav class="top-nav" aria-label="주 메뉴">
+      <a href="#games">게임 선택</a>
+      <a href="#ranking">TOP 10 랭킹</a>
+      <a href="#about">제작 이야기</a>
+    </nav>
     <a class="head-link" href="/admin/" aria-label="관리자 페이지">관리자 <span aria-hidden="true">↗</span></a>
   </header>
   <main>
-    <section class="hero container">
-      <div class="hero-copy">
-        <span class="eyebrow"><span class="dot"></span> EUNPYEONG MEDITECH HIGH SCHOOL</span>
-        <h1>상상이<br><span>게임이 되는 곳.</span></h1>
-        <p>누군가 만든 게임을 즐기는 데서 끝나지 마세요.<br>여기 있는 게임도 고등학생이 AI와 함께 만들 수 있습니다.</p>
-        <div class="hero-actions"><a id="heroPlay" class="btn btn-primary" href="#games">지금 게임 시작 <span>↗</span></a><a class="btn btn-secondary" href="#games">게임 둘러보기</a></div>
-        <div class="hero-data"><div><b id="playerCount">—</b><small>참가 플레이어</small></div><i></i><div><b id="playCount">—</b><small>기록된 플레이</small></div><i></i><div><b id="gameCount">—</b><small>플레이 가능 게임</small></div></div>
+    <section class="hero" aria-labelledby="portal-title">
+      <div class="hero-scene" aria-hidden="true"></div>
+      <div class="hero-scanlines" aria-hidden="true"></div>
+      <div class="hero-sparks" aria-hidden="true">
+        <i></i><i></i><i></i><i></i><i></i><i></i>
       </div>
-      <div class="hero-visual" aria-hidden="true">
-        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
-        <div class="float-label label-one">+ PERFECT!</div><div class="float-label label-two">30F CHALLENGE</div>
-        <div class="tower">
-          <div class="tower-face" style="--w:190px;--c:#8075ee;--i:0"></div>
-          <div class="tower-face" style="--w:180px;--c:#7e93fb;--i:1"></div>
-          <div class="tower-face" style="--w:166px;--c:#76b0ff;--i:2"></div>
-          <div class="tower-face" style="--w:152px;--c:#79d5f5;--i:3"></div>
-          <div class="tower-face" style="--w:140px;--c:#86f4e4;--i:4"></div>
-          <div class="tower-face" style="--w:128px;--c:#c2aaff;--i:5"></div>
-          <div class="tower-face" style="--w:111px;--c:#f8b3d8;--i:6"></div>
+      <div class="hero-content container">
+        <div class="hero-heading">
+          <span class="hero-arcade-chip">◆ EUNPYEONG MEDITECH HIGH SCHOOL ◆</span>
+          <h1 id="portal-title"><span class="title-smart">SMART AI</span><span class="title-lab">GAME LAB</span></h1>
+          <p class="hero-slogan">상상이 <strong>게임이 되는 곳!</strong></p>
+          <p class="hero-caption">AI로 만들고, 친구들과 플레이하자!</p>
         </div>
-        <div class="robot"><div class="antenna"></div><div class="robot-face"><i></i><i></i><span></span></div></div>
-        <div class="visual-footer">MAKE · PLAY · LEVEL UP</div>
+        <div class="hero-game-stickers" aria-hidden="true">
+          <span class="sticker sticker-tower">▦ <b>BUILD</b></span>
+          <span class="sticker sticker-rush">↗ <b>RUSH</b></span>
+          <span class="sticker sticker-merge">✦ <b>MERGE</b></span>
+        </div>
+        <div class="hero-bottom">
+          <div class="hero-actions">
+            <a id="heroPlay" class="pixel-action start-action" href="#games"><span aria-hidden="true">▶</span> 게임 시작 <span aria-hidden="true">»</span></a>
+            <div class="hero-sub-actions">
+              <a class="pixel-action rank-action" href="#ranking"><span aria-hidden="true">★</span> 랭킹 보기</a>
+              <a class="pixel-action games-action" href="#games"><span aria-hidden="true">▦</span> 게임 목록</a>
+            </div>
+          </div>
+          <div class="hero-data" aria-label="게임 연구소 이용 현황">
+            <div><b id="playerCount">—</b><small>참가 플레이어</small></div>
+            <i></i>
+            <div><b id="playCount">—</b><small>등록된 기록</small></div>
+            <i></i>
+            <div><b id="gameCount">—</b><small>플레이 가능 게임</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-school">은평메디텍고등학교 <strong>스마트AI과</strong></div>
+      <a class="hero-scroll" href="#games">▼ SCROLL TO PLAY</a>
+    </section>
+
+    <section class="container section" id="games" aria-labelledby="gamesHeading">
+      <div class="section-heading">
+        <div><span class="section-kicker">▦ SELECT YOUR GAME · STAGE 01</span><h2 id="gamesHeading">어떤 게임에 도전할까요?</h2></div>
+        <p>원하는 게임을 고르고 START!<br>스마트폰과 PC에서 모두 플레이할 수 있습니다.</p>
+      </div>
+      <div class="game-grid" id="gameGrid" aria-live="polite"><p class="empty-rank">게임 목록을 불러오는 중입니다...</p></div>
+    </section>
+
+    <section class="container section ranking-section" id="ranking" aria-labelledby="rankingHeading">
+      <div class="section-heading">
+        <div><span class="section-kicker">★ HALL OF FAME · TOP 10</span><h2 id="rankingHeading">최고 기록에 도전하세요!</h2></div>
+        <p>게임마다 새롭게 기록을 세우고<br>명예의 전당에 이름을 남겨 보세요.</p>
+      </div>
+      <div class="ranking-card">
+        <div class="ranking-bar">
+          <div class="ranking-heading"><span class="trophy" aria-hidden="true">★</span><div><strong id="rankTitle">게임별 랭킹</strong><small>온라인 기록 · 최고 10위까지</small></div></div>
+          <div class="ranking-filters">
+            <label for="rankGame" class="sr-only">게임 선택</label>
+            <select id="rankGame"><option value="ai-tower">AI 타워</option></select>
+            <label for="rankMode" class="sr-only">게임 모드</label>
+            <select id="rankMode"><option value="classic">자유 도전</option><option value="daily">오늘의 도전</option></select>
+            <label for="rankPeriod" class="sr-only">랭킹 기간</label>
+            <select id="rankPeriod"><option value="all">전체 기간</option><option value="today">오늘</option></select>
+            <label for="rankView" class="sr-only">기록 표시 방식</label>
+            <select id="rankView"><option value="all">모든 기록</option><option value="best">참가자별 최고</option></select>
+          </div>
+        </div>
+        <ol id="rankingList" class="ranking-list" aria-live="polite"><li class="empty-rank">랭킹을 불러오는 중입니다...</li></ol>
+        <div class="ranking-foot"><span id="rankingNotice">온라인 기록을 점수순으로 표시합니다.</span><button id="reloadRanking" type="button">새로고침 ↻</button></div>
       </div>
     </section>
-    <section class="container section" id="games">
-      <div class="section-heading"><div><span class="section-kicker">CHOOSE YOUR GAME</span><h2>어떤 게임에 도전할까요?</h2></div><p>터치 한 번으로 시작하는<br>스마트AI과의 게임 컬렉션</p></div>
-      <div class="game-grid" id="gameGrid" aria-live="polite"><p class="empty-rank">게임 목록을 불러오고 있습니다...</p></div>
+
+    <section class="container story-section" id="about" aria-labelledby="aboutHeading">
+      <div class="story-icon" aria-hidden="true">&lt;/&gt;</div>
+      <div><span class="section-kicker">✦ CREATE YOUR WORLD</span><h2 id="aboutHeading">게임을 넘어, 만드는 즐거움까지!</h2>
+        <p>게임을 즐기는 데서 끝나지 않습니다. 아이디어를 떠올리고 AI와 함께 코드를 만들고, 직접 테스트해서 친구들과 공유합니다. 은평메디텍고등학교 스마트AI과에서 여러분만의 게임을 만들어 보세요.</p>
+        <div class="story-steps"><span>01 아이디어</span><span>02 AI 활용</span><span>03 게임 개발</span><span>04 공개·도전</span></div>
+      </div>
     </section>
-    <section class="container section ranking-section" id="ranking">
-      <div class="section-heading"><div><span class="section-kicker">HALL OF FAME</span><h2>오늘의 주인공은 누구?</h2></div><p>게임마다, 매일 새롭게<br>기록에 도전해 보세요.</p></div>
-      <div class="ranking-card"><div class="ranking-bar"><div class="ranking-heading"><span class="trophy">★</span><div><strong id="rankTitle">게임별 랭킹</strong><small>게임별 점수와 참가자 기록</small></div></div><div class="ranking-filters"><label for="rankGame" class="sr-only">게임 선택</label><select id="rankGame"><option value="ai-tower">AI 타워</option></select><label for="rankMode" class="sr-only">게임 모드</label><select id="rankMode"><option value="classic">자유 도전</option><option value="daily">30층 미션</option></select><label for="rankPeriod" class="sr-only">랭킹 기간</label><select id="rankPeriod"><option value="all">전체 기간</option><option value="today">오늘</option></select><label for="rankView" class="sr-only">기록 표시 방식</label><select id="rankView"><option value="all">모든 기록</option><option value="best">참가자별 최고</option></select></div></div><ol id="rankingList" class="ranking-list" aria-live="polite"><li class="empty-rank">랭킹을 불러오는 중입니다.</li></ol><div class="ranking-foot"><span id="rankingNotice">등록된 기록을 점수 순서대로 표시합니다.</span><button id="reloadRanking" type="button">새로고침 ↻</button></div></div>
-    </section>
-    <section class="container story-section" id="about"><div class="story-icon">&lt;/&gt;</div><div><span class="section-kicker">FROM IDEA TO GAME</span><h2>이 게임, 어떻게 만든 걸까요?</h2><p>아이디어를 떠올리고, AI와 함께 코드와 이미지를 만들고, 직접 테스트해서 친구들에게 공개합니다. 스마트AI과에서는 게임을 즐기는 것을 넘어, 자신만의 작품을 만드는 경험에 도전합니다.</p><div class="story-steps"><span>01 아이디어</span><span>02 AI 활용</span><span>03 개발·수정</span><span>04 배포</span></div></div></section>
   </main>
-  <footer class="site-footer"><div class="container footer-inner"><span><b>SMART AI GAME LAB</b> · 은평메디텍고등학교 스마트AI과</span><span>아이디어가 게임이 되는 곳.</span></div></footer>
+  <footer class="site-footer"><div class="container footer-inner"><span><b>SMART AI GAME LAB</b> · 은평메디텍고등학교 스마트AI과</span><span>PLAY · CREATE · LEVEL UP</span></div></footer>
   <script type="module" src="/app.js"></script>
 </body>
 </html>

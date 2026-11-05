@@ -49,9 +49,9 @@ async function loadGames(){
     grid.replaceChildren();
     games.forEach((game,i)=>grid.append(drawCard(game,i)));
     if(!games.length)grid.append(el('p','empty-rank','현재 공개된 게임이 없습니다.'));
-    const play=$('heroPlay');
-    if(games.length){play.href=games[0].path;play.textContent=games[0].title+' 시작 ↗';}
-    else{play.href='#games';play.textContent='게임 둘러보기 ↗';}
+    // 메인 아케이드의 START 버튼은 게임 목록으로 이동합니다.
+    // 첫 게임을 자동 실행하지 않아 방문자가 원하는 게임을 선택할 수 있습니다.
+    $('heroPlay').href='#games';
     const current=$('rankGame').value,select=$('rankGame');select.replaceChildren();
     for(const game of games.filter(x=>x.supportsRanking)){
       const option=el('option','',game.title);option.value=game.id;select.append(option);
@@ -78,7 +78,7 @@ async function loadRanking(){
   const selected=games.find(x=>x.id===game);
   $('rankTitle').textContent=selected?selected.title+' 랭킹':'게임별 랭킹';
   const dailyOption=$('rankMode').querySelector('option[value="daily"]');
-  if(dailyOption)dailyOption.textContent=game==='ai-rush'?'45초 오늘의 도전':'30층 미션';
+  if(dailyOption)dailyOption.textContent=game==='ai-rush'?'45초 오늘의 도전':game==='ai-merge'?'오늘의 퍼즐':'30층 미션';
   if(!game||!selected){list.replaceChildren();list.append(el('li','empty-rank','랭킹이 제공되는 게임이 없습니다.'));return;}
   try{
     const data=await json('/api/rankings?game='+encodeURIComponent(game)+'&mode='+encodeURIComponent(mode)+'&period='+encodeURIComponent(period)+'&view='+encodeURIComponent(view));
@@ -87,7 +87,8 @@ async function loadRanking(){
     for(const item of data.rankings){
       const li=el('li',''),rank=el('span','rank-number',item.rank),name=el('span','rank-name',item.nickname);
       const score=el('span','rank-score',fmt(item.score)+'점');
-      const steps=el('small','',item.floors+(game==='ai-rush'?'계단':'층'));
+      const unit=game==='ai-rush'?'계단':game==='ai-merge'?'번 놓음':'층';
+      const steps=el('small','',item.floors+unit);
       score.append(steps);li.append(rank,name,score);list.append(li);
     }
     $('rankingNotice').textContent='온라인 TOP '+data.rankings.length+' · '+(view==='all'?'등록된 모든 플레이 기록':'참가자별 최고 기록');
