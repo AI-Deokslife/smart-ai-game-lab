@@ -1,0 +1,142 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {DatabaseSync} from 'node:sqlite';
+import {Script} from 'node:vm';
+import worker from '../src/index.js';
+import {COLS,ROWS,MAX_TURNS,createMergeGame,dropMergeRobot,replayMergeGame,mergeScoreSummary} from '../public/games/ai-merge/engine.js';
+
+const fixture=()=>{
+  const sqlite=new DatabaseSync(':memory:');
+  for(const name of ['0001_init.sql','0002_admin_login.sql','0003_game_catalog.sql','0004_score_nickname_snapshot.sql','0005_publish_ai_merge.sql'])
+    sqlite.exec(readFileSync(new URL('../migrations/'+name,import.meta.url),'utf8'));
+  return {sqlite,env:{DB:{prepare(sql){
+    let bound=[];return {
+      bind(...params){bound=params;return this;},
+      async first(){return sqlite.prepare(sql).get(...bound)||null;},
+      async all(){return {results:sqlite.prepare(sql).all(...bound)};},
+      async run(){return {meta:{changes:sqlite.prepare(sql).run(...bound).changes}};}
+    };
+  }}}};
+};
+async function api(env,path,{method='GET',body,token}={}){
+  const response=await worker.fetch(new Request('https://example.test'+path,{
+    method,
+    headers:{...(body?{'Content-Type':'application/json'}:{}),...(token?{Authorization:'Bearer '+token}:{})},
+    ...(body?{body:JSON.stringify(body)}:{})
+  }),env);
+  return {status:response.status,data:await response.json()};
+}
+function movesFor(seed,mode='classic',limit=26){
+  const state=createMergeGame(seed,mode);
+  for(let turn=0;turn<limit&&!state.over;turn++){
+    const viable=[0,1,2,3,4].filter(x=>state.grid[0][x]===0);
+    if(!viable.length)break;
+    const col=viable[turn%viable.length];
+    assert.equal(dropMergeRobot(state,col).ok,true);
+  }
+  return state;
+}
+
+test('합체 엔진은 같은 씨앗·입력으로 완전히 같은 결과를 재현한다',()=>{
+  const a=movesFor('seed-hello','classic',32);
+  const b=replayMergeGame('seed-hello','classic',a.moves);
+  assert.ok(b);
+  assert.deepEqual(a.grid,b.grid);
+  assert.deepEqual(mergeScoreSummary(a),mergeScoreSummary(b));
+  assert.ok(a.moves.length<=MAX_TURNS.classic);
+  assert.equal(a.grid.length,ROWS);
+  assert.equal(a.grid[0].length,COLS);
+  assert.equal(replayMergeGame('seed-hello','classic',[0,1,-1]),null);
+  assert.equal(replayMergeGame('seed-hello','daily',Array(36).fill(0)),null);
+  assert.equal(replayMergeGame('seed-hello','classic',[]),null);
+});
+test('붙은 로봇은 합체하고, 연쇄 합체 시 점수가 정확히 추가된다',()=>{
+  const g=createMergeGame('chain');
+  g.grid[6][0]=1;g.grid[6][1]=2;g.next=1;
+  const step=dropMergeRobot(g,0);
+  assert.equal(step.ok,true);
+  assert.equal(g.grid[6][0],3);
+  assert.equal(g.grid[6][1],0);
+  assert.equal(g.merges,2);
+  assert.equal(g.score,300);
+  assert.equal(g.maxCombo,2);
+  assert.equal(g.maxTier,3);
+  assert.equal(g.moves.length,1);
+});
+test('열이 가득 차면 낙하 거부하고 이전 점수·입력 기록 유지',()=>{
+  const g=createMergeGame('columns');
+  for(let y=0;y<ROWS;y++)g.grid[y][0]=9;
+  const result=dropMergeRobot(g,0);
+  assert.equal(result.ok,false);
+  assert.equal(g.moves.length,0);
+  assert.equal(g.score,0);
+});
+test('클래식의 온라인 점수는 서버가 입력 경로를 재현해 검사한다',async()=>{
+  const {sqlite,env}=fixture();
+  const created=await api(env,'/api/players',{method:'POST',body:{nickname:'합체연구자'}});
+  const token=created.data.token;
+  const start=await api(env,'/api/game/start',{method:'POST',token,body:{game:'ai-merge',mode:'classic'}});
+  assert.equal(start.status,201);
+  const seed=start.data.sessionId,client=movesFor(seed);
+  sqlite.prepare('UPDATE game_sessions SET started_at=? WHERE id=?').run(Date.now()-30000,seed);
+  const expected=mergeScoreSummary(client);
+  const invalid=await api(env,'/api/game/finish',{method:'POST',token,body:{sessionId:seed,...expected,score:expected.score+100,moves:client.moves}});
+  assert.equal(invalid.status,422);
+  const good=await api(env,'/api/game/finish',{method:'POST',token,body:{sessionId:seed,...expected,moves:client.moves}});
+  assert.equal(good.status,201);
+  assert.equal(good.data.score.score,expected.score);
+  const again=await api(env,'/api/game/finish',{method:'POST',token,body:{sessionId:seed,...expected,moves:client.moves}});
+  assert.equal(again.status,409);
+  const ranking=await api(env,'/api/rankings?game=ai-merge&mode=classic');
+  assert.equal(ranking.status,200);
+  assert.equal(ranking.data.rankings[0].nickname,'합체연구자');
+  assert.equal(ranking.data.rankings[0].score,expected.score);
+  const tower=await api(env,'/api/rankings?game=ai-tower');
+  assert.equal(tower.data.rankings.length,0);
+});
+test('오늘의 퍼즐은 한국 날짜의 동일한 로봇 순서를 공유하고 서버가 검증한다',async()=>{
+  const {sqlite,env}=fixture();
+  const register=await api(env,'/api/players',{method:'POST',body:{nickname:'데일리왕'}});
+  const token=register.data.token;
+  const start=await api(env,'/api/game/start',{method:'POST',token,body:{game:'ai-merge',mode:'daily'}});
+  assert.equal(start.status,201);
+  sqlite.prepare('UPDATE game_sessions SET started_at=? WHERE id=?').run(Date.now()-5000,start.data.sessionId);
+  const session=sqlite.prepare('SELECT * FROM game_sessions WHERE id=?').get(start.data.sessionId);
+  const day=new Date(session.started_at+9*3600000).toISOString().slice(0,10);
+  const g=movesFor(day,'daily',22);
+  const result=await api(env,'/api/game/finish',{method:'POST',token,body:{sessionId:session.id,...mergeScoreSummary(g),moves:g.moves}});
+  assert.equal(result.status,201);
+  assert.deepEqual(createMergeGame(day,'daily').next,createMergeGame(day,'daily').next);
+});
+test('랭킹은 게임·모드와 무관하게 항상 최대 10위까지만 반환한다',async()=>{
+  const {sqlite,env}=fixture();
+  for(let i=1;i<=13;i++){
+    const id='p'+i,sess='s'+i,score='score'+i;
+    sqlite.prepare('INSERT INTO players(id,token_hash,nickname,created_at) VALUES(?,?,?,?)').run(id,'hash-'+i,'선수'+i,'2026-11-05');
+    sqlite.prepare('INSERT INTO game_sessions(id,player_id,game_id,mode,started_at,finished_at) VALUES(?,?,?,?,?,?)')
+      .run(sess,id,'ai-merge','classic',1,2);
+    sqlite.prepare('INSERT INTO scores(id,session_id,player_id,game_id,mode,score,floors,perfects,combo,created_at,nickname) VALUES(?,?,?,?,?,?,?,?,?,?,?)')
+      .run(score,sess,id,'ai-merge','classic',i*100,i,0,0,'2026-11-05','선수'+i);
+  }
+  for(const view of ['all','best']){
+    const result=await api(env,'/api/rankings?game=ai-merge&mode=classic&view='+view);
+    assert.equal(result.status,200);
+    assert.equal(result.data.rankings.length,10);
+    assert.equal(result.data.rankings[0].rank,1);
+    assert.equal(result.data.rankings[9].rank,10);
+  }
+});
+test('HTML/CSS/JS 게임 파일과 공통 점수 SDK 경로는 일치한다',()=>{
+  const html=readFileSync(new URL('../public/games/ai-merge/index.html',import.meta.url),'utf8');
+  const js=readFileSync(new URL('../public/games/ai-merge/game.js',import.meta.url),'utf8');
+  const css=readFileSync(new URL('../public/games/ai-merge/styles.css',import.meta.url),'utf8');
+  assert.match(html,/game\.js/);assert.match(html,/styles\.css/);
+  assert.match(html,/\/shared\/lab-sdk\.js/);
+  assert.match(html,/id="dropBtn"/);assert.match(html,/id="board"/);
+  assert.match(css,/grid-template-columns:repeat\(5/);
+  assert.match(js,/SmartAILab\.begin\('ai-merge'/);
+  assert.match(js,/SmartAILab\.finish\(/);
+  assert.match(js,/SmartAILab\.ranking\('ai-merge'/);
+  new Script(js.replace(/^import .* from '\.\/engine\.js';/m,''),{filename:'game.js'});
+});
