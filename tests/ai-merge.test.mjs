@@ -211,3 +211,32 @@ test('HTML/CSS/JS 게임 파일과 공통 점수 SDK 경로는 일치한다',()=
   assert.match(js,/SmartAILab\.ranking\('ai-merge'/);
   new Script(js.replace(/^import .* from '\.\/engine\.js';/m,''),{filename:'game.js'});
 });
+
+
+test('도트풍 타이틀 화면 버튼·모달과 게임 기능이 실제 DOM 요소로 연결된다',()=>{
+  const html=readFileSync(new URL('../public/games/ai-merge/index.html',import.meta.url),'utf8');
+  const js=readFileSync(new URL('../public/games/ai-merge/game.js',import.meta.url),'utf8');
+  const css=readFileSync(new URL('../public/games/ai-merge/styles.css',import.meta.url),'utf8');
+  const art=readFileSync(new URL('../public/games/ai-merge/title-city.svg',import.meta.url),'utf8');
+  const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
+  const known=new Set(ids);
+  assert.equal(ids.length,known.size,'HTML ID가 중복되면 안 됩니다.');
+  for(const m of js.matchAll(/\$\('([^']+)'\)/g)){
+    assert.ok(known.has(m[1]),'게임 JS가 참조하는 DOM 요소가 없습니다: '+m[1]);
+  }
+  for(const id of ['titleScreen','titlePlayBtn','titleRankBtn','titleSettingsBtn',
+    'titleSetupDialog','titleRankDialog','titleSettingsDialog','titleSetupHost',
+    'titleRankMode','titleRankView','titleSoundSwitch','titleSpeedSwitch']){
+    assert.ok(known.has(id));
+  }
+  assert.match(css,/title-city\.svg/);
+  assert.match(css,/max-aspect-ratio:9\/11/);
+  assert.match(css,/\.pixel-title-screen\[hidden\]/);
+  assert.match(art,/<svg[\s\S]*viewBox="0 0 1600 900"/);
+  assert.match(art,/<\/svg>\s*$/);
+  assert.match(js,/\$\('titleSetupHost'\)\.append\(\$\('startOverlay'\)\)/);
+  assert.match(js,/\$\('titleScreen'\)\.hidden=true/);
+  assert.match(js,/SmartAILab\.ranking\('ai-merge',mode,'all',view\)/);
+  assert.match(js,/loadTitleRanks/);
+  assert.match(js,/localStorage\.setItem\('smart-ai-merge-sound'/);
+});
