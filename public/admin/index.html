@@ -1,18 +1,151 @@
-<!DOCTYPE html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0c1227"><title>관리자 | SMART AI GAME LAB</title>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10172b">
+<title>관리자 | SMART AI GAME LAB</title>
 <style>
-:root{color-scheme:dark;font-family:Pretendard,'Malgun Gothic',system-ui,sans-serif;background:#0b1125;color:#eef5ff}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1080px;margin:0 auto;padding:30px 22px 80px}.nav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:46px}a{color:#9df6e4;text-decoration:none}.brand{font-weight:900;letter-spacing:.02em;font-size:15px}h1{font-size:clamp(29px,6vw,42px);letter-spacing:-.06em;margin:0 0 9px}p{color:#aebcda;line-height:1.7}label{font-size:12px;color:#aebcda;display:block;margin-bottom:9px}input{width:100%;min-width:0;border:1px solid #ffffff28;background:#1c2748;border-radius:13px;color:#fff;font:inherit;padding:14px}button{border:0;background:#91eae2;color:#12243e;font:inherit;font-weight:850;border-radius:12px;padding:14px 20px;cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}.login{border:1px solid #ffffff1e;background:#151e3c;border-radius:22px;padding:23px;margin-top:24px;max-width:650px}.input-row{display:flex;gap:10px}.notice{font-size:12px;color:#b1d8eb;padding-top:11px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:25px 0}.metric{border:1px solid #ffffff20;background:#182440;border-radius:15px;padding:20px}.metric strong{font-size:30px;display:block;margin-bottom:5px}.metric small{color:#aebcda}section{margin-top:25px}.tablewrap{overflow:auto;border:1px solid #ffffff23;border-radius:16px;background:#151e36}table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}th,td{padding:15px;border-bottom:1px solid #ffffff14;white-space:nowrap}th{color:#9eb2d6;background:#202b47;font-size:11px}td:last-child{text-align:right}td button{background:#782a45;color:#fff;padding:9px 12px;font-size:11px}.muted{color:#97a7c6}.hint{background:#1a2740;border-radius:12px;padding:14px;font-size:12px}.hidden{display:none}@media(max-width:600px){.wrap{padding:21px 14px}.input-row{flex-direction:column}.stats{gap:7px}.metric{padding:12px}.metric strong{font-size:23px}}
-</style></head>
-<body><main class="wrap"><div class="nav"><a class="brand" href="/">← SMART AI GAME LAB</a><span class="muted">ADMIN CONSOLE</span></div>
-<h1>게임 운영 관리</h1><p>운영 통계와 최근 점수를 확인하고 비정상 기록을 삭제할 수 있습니다.</p>
-<div class="login"><label for="adminKey">관리자 보안 키 (Cloudflare Secret `ADMIN_KEY`)</label><div class="input-row"><input id="adminKey" type="password" autocomplete="off" placeholder="관리자 키를 입력하세요"><button id="signin" type="button">관리자 접속</button></div><div id="status" class="notice">보안 키는 화면을 새로고침하면 지워집니다. GitHub 코드에는 입력하지 마세요.</div></div>
-<div id="dashboard" class="hidden"><div class="stats"><div class="metric"><strong id="players">–</strong><small>총 참가자</small></div><div class="metric"><strong id="scores">–</strong><small>저장된 기록</small></div><div class="metric"><strong id="sessions">–</strong><small>시작된 게임</small></div></div>
-<section><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2>최근 게임 기록</h2><button id="refresh" type="button">새로고침</button></div><div class="tablewrap"><table><thead><tr><th>닉네임</th><th>게임</th><th>모드</th><th>점수</th><th>층수</th><th>기록 시각 (UTC)</th><th>관리</th></tr></thead><tbody id="scoresBody"><tr><td colspan="7">기록 조회 중…</td></tr></tbody></table></div></section>
-<p class="hint">기록 삭제 시 복구할 수 없습니다. 개인정보를 수집하지 않는 익명 시스템으로 운영하며, 현재 버전의 점수 검증은 기본적인 범위·시간 검증입니다.</p></div>
-</main><script>
-const $=id=>document.getElementById(id);let key='';
-async function api(path,options={}){const response=await fetch(path,{...options,headers:{'X-Admin-Key':key,...(options.headers||{})},cache:'no-store'});const data=await response.json();if(!response.ok)throw new Error(data.error||'요청 실패');return data;}
-async function load(){const [stats,records]=await Promise.all([api('/api/admin/summary'),api('/api/admin/scores')]);for(const k of ['players','scores','sessions'])$(k).textContent=stats[k].toLocaleString('ko-KR');const body=$('scoresBody');body.replaceChildren();if(!records.scores.length){const tr=document.createElement('tr');const td=document.createElement('td');td.colSpan=7;td.textContent='아직 기록이 없습니다.';tr.append(td);body.append(tr);return;}for(const record of records.scores){const tr=document.createElement('tr');for(const content of [record.nickname,record.game_id,record.mode,record.score.toLocaleString('ko-KR'),record.floors,record.created_at]){const td=document.createElement('td');td.textContent=content;tr.append(td);}const td=document.createElement('td'),button=document.createElement('button');button.textContent='삭제';button.addEventListener('click',async()=>{if(!confirm(record.nickname+'의 '+record.score+'점 기록을 삭제하시겠습니까?'))return;try{await api('/api/admin/scores/'+encodeURIComponent(record.id),{method:'DELETE'});await load();}catch(e){alert(e.message);}});td.append(button);tr.append(td);body.append(tr);}}
-$('signin').addEventListener('click',async()=>{key=$('adminKey').value.trim();if(!key){$('status').textContent='관리자 키를 입력하세요.';return;}$('status').textContent='접속 확인 중…';try{await load();$('dashboard').classList.remove('hidden');$('status').textContent='관리자 인증 완료. 키는 현재 페이지 메모리에만 보관됩니다.';$('adminKey').value='';}catch(e){key='';$('dashboard').classList.add('hidden');$('status').textContent='접속 실패: '+e.message;}});
-$('refresh').addEventListener('click',()=>load().catch(e=>alert(e.message)));
+:root{font-family:system-ui,'Malgun Gothic',sans-serif;color:#f0f5ff;background:#0d1428;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0}.wrap{max-width:1080px;padding:26px 18px 70px;margin:auto}
+a{color:#83e5d9;text-decoration:none}button,input{font:inherit}h1{font-size:clamp(27px,6vw,40px);letter-spacing:-.045em;margin:25px 0 5px}
+p{line-height:1.6;color:#b4c2de}.nav{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{font-weight:850}.label{display:block;color:#b4c2de;font-size:13px;margin:13px 0 7px}
+input{background:#1e2b4d;color:white;border:1px solid #435276;border-radius:12px;padding:13px;width:100%}
+button{border:0;background:#87e5d7;color:#10273a;font-weight:800;padding:13px 17px;border-radius:12px;cursor:pointer}
+button:disabled{opacity:.5;cursor:wait}.secondary{background:#34425f;color:white}
+.danger{background:#783049;color:white}.panel{padding:23px;border-radius:20px;background:#17213d;border:1px solid #34405e;margin-top:23px}
+form{max-width:500px}.stack{display:grid;gap:10px}.help{font-size:12px;color:#aac0d7;margin:8px 0 15px}
+.message{min-height:23px;font-size:13px;color:#8ee8d6;margin-top:12px}.hidden{display:none!important}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:22px 0}
+.metric{border:1px solid #3b4868;background:#1a2948;border-radius:16px;padding:17px}
+.metric strong{display:block;font-size:clamp(24px,4vw,32px)}.metric small{color:#b4c2de}
+table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}
+th,td{padding:13px 11px;border-bottom:1px solid #31405a;white-space:nowrap}
+th{color:#a7bbdc}section{margin:26px 0}.tablewrap{overflow:auto;background:#17213d;border-radius:16px;border:1px solid #34405e}
+.headrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.muted{color:#a1b2d0}
+@media(max-width:550px){.wrap{padding:20px 12px 60px}.panel{padding:17px}.stats{gap:7px}.metric{padding:11px}}
+</style>
+</head>
+<body><main class="wrap">
+<nav class="nav"><a class="brand" href="/">← SMART AI GAME LAB</a><span class="muted">ADMIN CONSOLE</span></nav>
+<h1>게임 운영 관리</h1>
+<p>학생들의 게임 기록을 살펴보고 운영할 수 있습니다.</p>
+<section class="panel hidden" id="setupPanel">
+  <h2>첫 관리자 비밀번호 설정</h2>
+  <p>처음 한 번만 Cloudflare에 등록한 <strong>ADMIN_KEY</strong>를 입력하세요. 이후에는 새로 정한 짧은 비밀번호로 로그인합니다.</p>
+  <form id="setupForm" class="stack">
+    <label class="label" for="setupKey">기존 Cloudflare ADMIN_KEY</label>
+    <input id="setupKey" type="password" autocomplete="off" required>
+    <label class="label" for="setupPassword">새 관리자 비밀번호</label>
+    <input id="setupPassword" type="password" autocomplete="new-password" minlength="8" maxlength="64" required>
+    <label class="label" for="setupPassword2">새 비밀번호 확인</label>
+    <input id="setupPassword2" type="password" autocomplete="new-password" minlength="8" maxlength="64" required>
+    <div class="help">영문과 숫자를 포함해 8~64자로 설정하세요. 기존 ADMIN_KEY를 계속 외우실 필요는 없습니다.</div>
+    <button type="submit">관리자 비밀번호 설정</button>
+  </form>
+  <div class="message" id="setupMsg" role="status"></div>
+</section>
+<section class="panel hidden" id="loginPanel">
+  <h2>관리자 로그인</h2><p>설정하신 관리자 비밀번호를 입력하세요.</p>
+  <form id="loginForm" class="stack">
+    <label class="label" for="loginPassword">비밀번호</label>
+    <input id="loginPassword" type="password" autocomplete="current-password" required>
+    <button type="submit">로그인</button>
+  </form>
+  <div class="message" id="loginMsg" role="status"></div>
+  <p class="help">5회 연속 틀리면 15분 동안 로그인이 제한됩니다. 비밀번호를 잊으셨다면 Cloudflare 관리자에게 문의하세요.</p>
+</section>
+<div id="dashboard" class="hidden">
+  <div class="headrow"><h2>운영 현황</h2><div class="actions"><button class="secondary" id="refresh" type="button">새로고침</button><button class="secondary" id="toggleChange" type="button">비밀번호 변경</button><button class="secondary" id="logout" type="button">로그아웃</button></div></div>
+  <div class="stats"><div class="metric"><strong id="players">—</strong><small>총 참가자</small></div><div class="metric"><strong id="scores">—</strong><small>저장된 기록</small></div><div class="metric"><strong id="sessions">—</strong><small>시작된 게임</small></div></div>
+  <section class="panel hidden" id="changePanel">
+    <h2>관리자 비밀번호 변경</h2>
+    <form id="changeForm" class="stack">
+      <label class="label" for="currentPassword">현재 비밀번호</label><input id="currentPassword" type="password" autocomplete="current-password" required>
+      <label class="label" for="newPassword">새 비밀번호</label><input id="newPassword" type="password" autocomplete="new-password" minlength="8" maxlength="64" required>
+      <label class="label" for="confirmPassword">새 비밀번호 확인</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" maxlength="64" required>
+      <p class="help">영문·숫자 포함 8~64자. 변경하면 다른 기기의 관리자 로그인이 해제됩니다.</p>
+      <button type="submit">변경 저장</button>
+    </form>
+    <div class="message" id="changeMsg" role="status"></div>
+  </section>
+  <section><div class="headrow"><h2>최근 게임 기록</h2></div><div class="tablewrap"><table><thead><tr><th>닉네임</th><th>게임</th><th>모드</th><th>점수</th><th>층수</th><th>기록 시각(UTC)</th><th>관리</th></tr></thead><tbody id="scoresBody"></tbody></table></div></section>
+  <p class="help">기록 삭제는 되돌릴 수 없습니다. 현재 버전의 점수 검증은 기본적인 범위·시간 검사입니다.</p>
+</div>
+<p id="globalMsg" class="message" role="status"></p>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const show=(id,on)=>$(id).classList.toggle('hidden',!on);
+const clear=(...ids)=>ids.forEach(id=>$(id).value='');
+function msg(id,text){$(id).textContent=text;}
+async function api(path,{method='GET',body}={}){
+  const response=await fetch(path,{
+    method, credentials:'same-origin', cache:'no-store',
+    headers:{...(method!=='GET'?{'Content-Type':'application/json','X-Requested-With':'SmartAILabAdmin'}:{})},
+    ...(body?{body:JSON.stringify(body)}:{})
+  });
+  const data=await response.json().catch(()=>({error:'서버 응답을 읽지 못했습니다.'}));
+  if(!response.ok)throw new Error(data.error||'요청이 실패했습니다.');
+  return data;
+}
+async function load(){
+  const [stats,records]=await Promise.all([api('/api/admin/summary'),api('/api/admin/scores')]);
+  for(const key of ['players','scores','sessions'])$(key).textContent=Number(stats[key]||0).toLocaleString('ko-KR');
+  const body=$('scoresBody');body.replaceChildren();
+  if(!records.scores.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=7;td.textContent='아직 기록이 없습니다.';tr.append(td);body.append(tr);return;}
+  for(const item of records.scores){
+    const tr=document.createElement('tr');
+    for(const value of [item.nickname,item.game_id,item.mode,Number(item.score).toLocaleString('ko-KR'),item.floors,item.created_at]){
+      const td=document.createElement('td');td.textContent=String(value);tr.append(td);
+    }
+    const td=document.createElement('td'),btn=document.createElement('button');
+    btn.type='button';btn.className='danger';btn.textContent='삭제';
+    btn.onclick=async()=>{
+      if(!confirm(item.nickname+'의 '+item.score+'점 기록을 삭제하시겠습니까?'))return;
+      try{await api('/api/admin/scores/'+encodeURIComponent(item.id),{method:'DELETE'});await load();}
+      catch(e){msg('globalMsg','삭제 실패: '+e.message);}
+    };
+    td.append(btn);tr.append(td);body.append(tr);
+  }
+}
+async function enter(){
+  show('setupPanel',false);show('loginPanel',false);show('dashboard',true);
+  try{await load();msg('globalMsg','관리자 로그인 완료');}
+  catch(e){show('dashboard',false);show('loginPanel',true);msg('loginMsg','조회 실패: '+e.message);}
+}
+async function start(){
+  try{
+    const status=await api('/api/admin/auth/status');
+    if(status.loggedIn)return enter();
+    show('setupPanel',!status.configured);
+    show('loginPanel',status.configured);
+    show('dashboard',false);
+  }catch(e){msg('globalMsg','접속 오류: '+e.message);}
+}
+$('setupForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  if($('setupPassword').value!==$('setupPassword2').value)return msg('setupMsg','새 비밀번호가 일치하지 않습니다.');
+  msg('setupMsg','설정 중…');
+  try{await api('/api/admin/auth/setup',{method:'POST',body:{setupKey:$('setupKey').value,password:$('setupPassword').value}});clear('setupKey','setupPassword','setupPassword2');await enter();}
+  catch(err){msg('setupMsg',err.message);}
+});
+$('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();msg('loginMsg','로그인 확인 중…');
+  try{await api('/api/admin/auth/login',{method:'POST',body:{password:$('loginPassword').value}});clear('loginPassword');await enter();}
+  catch(err){msg('loginMsg',err.message);}
+});
+$('toggleChange').onclick=()=>show('changePanel',$('changePanel').classList.contains('hidden'));
+$('changeForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  if($('newPassword').value!==$('confirmPassword').value)return msg('changeMsg','새 비밀번호가 일치하지 않습니다.');
+  try{
+    await api('/api/admin/auth/change-password',{method:'POST',body:{currentPassword:$('currentPassword').value,newPassword:$('newPassword').value}});
+    clear('currentPassword','newPassword','confirmPassword');msg('changeMsg','비밀번호가 변경됐습니다. 다른 기기에서는 다시 로그인해야 합니다.');
+  }catch(err){msg('changeMsg',err.message);}
+});
+$('refresh').onclick=()=>load().catch(e=>msg('globalMsg',e.message));
+$('logout').onclick=async()=>{try{await api('/api/admin/auth/logout',{method:'POST'});}finally{show('changePanel',false);await start();}};
+start();
 </script></body></html>
