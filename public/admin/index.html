@@ -25,6 +25,24 @@ th{color:#a7bbdc}section{margin:26px 0}.tablewrap{overflow:auto;background:#1721
 .headrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .actions{display:flex;gap:8px;flex-wrap:wrap}.muted{color:#a1b2d0}
 @media(max-width:550px){.wrap{padding:20px 12px 60px}.panel{padding:17px}.stats{gap:7px}.metric{padding:11px}}
+
+.admin-tabs{display:flex;gap:10px;margin:22px 0 14px;flex-wrap:wrap}
+.admin-tabs button{background:#2c3a5b;color:#d2e4f8;border:1px solid #53678e}
+.admin-tabs button.active{background:#87e5d7;color:#11223d}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.field{min-width:0}.field.wide{grid-column:1/-1}
+.field label{display:block;margin-bottom:7px;font-size:13px;color:#bfd0e9}
+.field input,.field select{width:100%;border-radius:12px;padding:13px;background:#1e2b4d;border:1px solid #435276;color:white;font:inherit}
+.field small{display:block;color:#aabbd4;margin-top:6px;line-height:1.5}
+.checkbox-line{display:flex;align-items:center;gap:9px;font-size:14px}.checkbox-line input{width:20px;height:20px;accent-color:#87e5d7}
+.game-list{display:grid;gap:10px;margin-top:15px}
+.manage-card{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #344e71;background:#202b47;padding:15px;border-radius:14px}
+.manage-card h3{margin:0 0 5px;font-size:15px}.manage-card p{margin:0 0 6px;font-size:12px;color:#b5c7e0}
+.manage-card small{font-size:11px;color:#a1b5cf}
+.manage-status{font-size:11px;color:#90f0cf;margin-left:8px}
+.manage-status.off{color:#ffc3ab}
+.buttonbar{display:flex;gap:9px;flex-wrap:wrap;margin-top:17px}
+@media(max-width:550px){.form-grid{grid-template-columns:1fr}.field.wide{grid-column:auto}.manage-card{align-items:flex-start}}
 </style>
 </head>
 <body><main class="wrap">
@@ -70,8 +88,34 @@ th{color:#a7bbdc}section{margin:26px 0}.tablewrap{overflow:auto;background:#1721
     </form>
     <div class="message" id="changeMsg" role="status"></div>
   </section>
+  <div class="admin-tabs" role="group" aria-label="관리 메뉴"><button id="viewRecords" type="button" class="active">기록 관리</button><button id="viewGames" type="button">게임 관리</button></div>
+  <div id="recordsPanel">
   <section><div class="headrow"><h2>최근 게임 기록</h2></div><div class="tablewrap"><table><thead><tr><th>닉네임</th><th>게임</th><th>모드</th><th>점수</th><th>층수</th><th>기록 시각(UTC)</th><th>관리</th></tr></thead><tbody id="scoresBody"></tbody></table></div></section>
   <p class="help">기록 삭제는 되돌릴 수 없습니다. 현재 버전의 점수 검증은 기본적인 범위·시간 검사입니다.</p>
+  </div>
+  <div id="gamesPanel" class="hidden">
+    <section class="panel">
+      <div class="headrow"><h2>등록된 게임</h2><button class="secondary" id="reloadGames" type="button">목록 새로고침</button></div>
+      <p class="help">공개 여부와 순서를 변경하면 게임 포털에 바로 반영됩니다. 비공개로 변경해도 기존 점수는 삭제되지 않습니다.</p>
+      <div id="managedGames" class="game-list" aria-live="polite"></div>
+    </section>
+    <section class="panel">
+      <h2 id="editHeading">새 게임 등록</h2>
+      <p class="help">게임 파일은 먼저 GitHub의 <code>public/games/게임ID/</code>에 배포해야 합니다. 이 화면은 게임 정보를 등록하는 곳이며 HTML 파일 업로드 기능은 아닙니다. 온라인 랭킹은 게임별 서버 검증을 구현한 작품에서만 지원됩니다.</p>
+      <form id="gameForm">
+        <div class="form-grid">
+          <div class="field"><label for="editGameId">게임 ID (영문 소문자, 숫자, -)</label><input id="editGameId" maxlength="31" placeholder="my-game" required pattern="[a-z][a-z0-9-]{1,30}"><small>게임 실행 주소에 사용하며 등록 후 변경할 수 없습니다.</small></div>
+          <div class="field"><label for="editGameTitle">표시 제목</label><input id="editGameTitle" maxlength="40" placeholder="새로운 게임" required></div>
+          <div class="field wide"><label for="editGameSubtitle">게임 소개</label><input id="editGameSubtitle" maxlength="120" placeholder="게임의 특징을 한 문장으로" required></div>
+          <div class="field"><label for="editGameVisual">포털 디자인</label><select id="editGameVisual"><option value="tower">타워 블록</option><option value="rush">네온 계단</option><option value="merge">로봇 합체</option><option value="neon">네온 별</option><option value="puzzle">퍼즐</option></select></div>
+          <div class="field"><label for="editGameOrder">표시 순서 (작을수록 먼저)</label><input id="editGameOrder" type="number" min="0" max="9999" step="1" value="100" required></div>
+          <div class="field wide"><label class="checkbox-line"><input id="editGameEnabled" type="checkbox"> 학생에게 공개하기</label><small>공개하면 사이트 게임 목록에 표시됩니다. 미배포 파일이 없는지 반드시 확인하세요.</small></div>
+        </div>
+        <div class="buttonbar"><button type="submit" id="gameSubmit">게임 등록</button><button class="secondary" type="button" id="newGame">새 게임 입력</button></div>
+      </form>
+      <div id="gameMsg" role="status" class="message"></div>
+    </section>
+  </div>
 </div>
 <p id="globalMsg" class="message" role="status"></p>
 </main>
@@ -115,6 +159,69 @@ async function enter(){
   try{await load();msg('globalMsg','관리자 로그인 완료');}
   catch(e){show('dashboard',false);show('loginPanel',true);msg('loginMsg','조회 실패: '+e.message);}
 }
+
+let chosenId=null;
+function activeTab(tab){
+  const isGames=tab==='games';
+  show('gamesPanel',isGames);show('recordsPanel',!isGames);
+  $('viewGames').classList.toggle('active',isGames);
+  $('viewRecords').classList.toggle('active',!isGames);
+  if(isGames)loadGamesAdmin();
+}
+function clearGameForm(){
+  chosenId=null;$('gameForm').reset();$('editGameId').disabled=false;
+  $('editGameOrder').value='100';$('editHeading').textContent='새 게임 등록';
+  $('gameSubmit').textContent='게임 등록';msg('gameMsg','');
+}
+function fillGame(game){
+  chosenId=game.id;
+  $('editGameId').value=game.id;$('editGameId').disabled=true;
+  $('editGameTitle').value=game.title;$('editGameSubtitle').value=game.subtitle;
+  $('editGameVisual').value=game.visual;$('editGameOrder').value=game.sort_order;
+  $('editGameEnabled').checked=game.enabled;
+  $('editHeading').textContent=game.title+' 정보 편집';
+  $('gameSubmit').textContent='변경 사항 저장';msg('gameMsg','');
+  $('gameForm').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+async function loadGamesAdmin(){
+  const box=$('managedGames');box.replaceChildren();
+  const wait=document.createElement('p');wait.textContent='게임 정보를 불러오는 중...';box.append(wait);
+  try{
+    const data=await api('/api/admin/games');box.replaceChildren();
+    if(!data.games.length){const p=document.createElement('p');p.textContent='등록된 게임이 없습니다.';box.append(p);}
+    for(const g of data.games){
+      const row=document.createElement('div');row.className='manage-card';
+      const details=document.createElement('div');
+      const name=document.createElement('h3');name.textContent=g.title;
+      const status=document.createElement('span');status.className='manage-status'+(g.enabled?'':' off');status.textContent=g.enabled?'공개':'비공개';name.append(status);
+      const subtitle=document.createElement('p');subtitle.textContent=g.subtitle;
+      const meta=document.createElement('small');meta.textContent=g.id+' · 순서 '+g.sort_order+' · '+(g.supportsRanking?'온라인 랭킹 지원':'별도 점수 검증 필요');
+      details.append(name,subtitle,meta);
+      const edit=document.createElement('button');edit.type='button';edit.className='secondary';edit.textContent='편집';edit.addEventListener('click',()=>fillGame(g));
+      row.append(details,edit);box.append(row);
+    }
+  }catch(e){box.replaceChildren();const p=document.createElement('p');p.textContent='목록 조회 실패: '+e.message;box.append(p);}
+}
+$('viewRecords').onclick=()=>activeTab('records');
+$('viewGames').onclick=()=>activeTab('games');
+$('reloadGames').onclick=loadGamesAdmin;
+$('newGame').onclick=clearGameForm;
+$('gameForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const id=chosenId||$('editGameId').value.trim();
+  const enabled=$('editGameEnabled').checked;
+  if(!chosenId&&enabled&&!confirm('게임 파일이 GitHub에 배포되었습니까? 파일이 없다면 공개 주소가 작동하지 않습니다.'))return;
+  const game={id,title:$('editGameTitle').value,subtitle:$('editGameSubtitle').value,
+    visual:$('editGameVisual').value,sort_order:Number($('editGameOrder').value),enabled};
+  $('gameSubmit').disabled=true;msg('gameMsg','게임 정보를 저장하고 있습니다...');
+  try{
+    await api(chosenId?'/api/admin/games/'+encodeURIComponent(chosenId):'/api/admin/games',{method:chosenId?'PATCH':'POST',body:game});
+    msg('gameMsg','저장했습니다. 게임 포털에 변경 사항이 반영됩니다.');
+    await loadGamesAdmin();
+    if(!chosenId)clearGameForm();
+  }catch(err){msg('gameMsg','저장 실패: '+err.message);}
+  finally{$('gameSubmit').disabled=false;}
+});
 async function start(){
   try{
     const status=await api('/api/admin/auth/status');
