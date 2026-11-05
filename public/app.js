@@ -72,7 +72,7 @@ async function loadStats(){
   }catch{$('playerCount').textContent='—';$('playCount').textContent='—';}
 }
 async function loadRanking(){
-  const list=$('rankingList'),game=$('rankGame').value,mode=$('rankMode').value,period=$('rankPeriod').value;
+  const list=$('rankingList'),game=$('rankGame').value,mode=$('rankMode').value,period=$('rankPeriod').value,view=$('rankView').value;
   list.replaceChildren();
   const wait=el('li','empty-rank','온라인 순위를 불러오는 중입니다.');list.append(wait);
   const selected=games.find(x=>x.id===game);
@@ -81,7 +81,7 @@ async function loadRanking(){
   if(dailyOption)dailyOption.textContent=game==='ai-rush'?'45초 오늘의 도전':'30층 미션';
   if(!game||!selected){list.replaceChildren();list.append(el('li','empty-rank','랭킹이 제공되는 게임이 없습니다.'));return;}
   try{
-    const data=await json('/api/rankings?game='+encodeURIComponent(game)+'&mode='+encodeURIComponent(mode)+'&period='+encodeURIComponent(period));
+    const data=await json('/api/rankings?game='+encodeURIComponent(game)+'&mode='+encodeURIComponent(mode)+'&period='+encodeURIComponent(period)+'&view='+encodeURIComponent(view));
     list.replaceChildren();
     if(!data.rankings.length){list.append(el('li','empty-rank','아직 기록이 없습니다. 첫 번째 주인공이 되어 보세요!'));return;}
     for(const item of data.rankings){
@@ -90,12 +90,12 @@ async function loadRanking(){
       const steps=el('small','',item.floors+(game==='ai-rush'?'계단':'층'));
       score.append(steps);li.append(rank,name,score);list.append(li);
     }
-    $('rankingNotice').textContent='온라인 TOP '+data.rankings.length+' · 플레이어별 최고 점수';
+    $('rankingNotice').textContent='온라인 TOP '+data.rankings.length+' · '+(view==='all'?'등록된 모든 플레이 기록':'참가자별 최고 기록');
   }catch{
     list.replaceChildren();list.append(el('li','empty-rank','온라인 랭킹을 불러올 수 없습니다.'));
     $('rankingNotice').textContent='온라인 연결 대기 중';
   }
 }
-for(const id of ['rankGame','rankMode','rankPeriod'])$(id).addEventListener('change',loadRanking);
+for(const id of ['rankGame','rankMode','rankPeriod','rankView'])$(id).addEventListener('change',loadRanking);
 $('reloadRanking').addEventListener('click',loadRanking);
 loadGames();loadStats();
