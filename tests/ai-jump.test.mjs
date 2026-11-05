@@ -34,7 +34,9 @@ async function api(env,path,{method='GET',token,body}={}){
 const play=(seed,mode='classic',max=300)=>{
   const state=createJumpGame(seed,mode),inputs=[];
   for(let i=0;i<max&&!state.over;i++){
-    const mask=i===0?4:(i%55===0?4:((i%80<24)?2:((i%80>58)?1:0)));
+    const support=state.platforms[state.groundId];
+    const nearEdge=state.grounded&&support&&state.x>platformX(support,state.tick)+support.w/2-65;
+    const mask=nearEdge?6:2;
     inputs.push(mask);stepJumpGame(state,mask);
   }
   return {state,inputs,trace:packJumpInputs(inputs)};
@@ -42,18 +44,18 @@ const play=(seed,mode='classic',max=300)=>{
 
 test('AI 네온 점프: 기본 발판·물리 낙하·점프 판정',()=>{
   const state=createJumpGame('physics-test','classic');
-  assert.equal(state.x,200);
+  assert.equal(state.x,84);
   assert.equal(state.grounded,true);
-  assert.equal(state.platforms[0].y,76);
+  assert.equal(state.platforms[0].y,92);
   stepJumpGame(state,4);
-  assert.ok(state.y>76);
+  assert.ok(state.y>92);
   assert.ok(state.vy>0);
   const beginning=state.y;
   for(let i=0;i<10;i++)stepJumpGame(state,2);
   assert.ok(state.y>beginning);
-  assert.ok(state.x>200);
+  assert.ok(state.x>84);
   assert.ok(state.platforms.length>5);
-  assert.equal(WIDTH,400);assert.equal(HEIGHT,650);
+  assert.equal(WIDTH,640);assert.equal(HEIGHT,440);
 });
 test('정해진 25fps 엔진은 같은 씨앗/조작으로 항상 동일한 높이와 점수를 낸다',()=>{
   assert.equal(FPS,25);assert.equal(FRAME_MS,40);
@@ -90,6 +92,59 @@ test('움직이는 발판과 부서지는 발판은 다른 동작을 갖는다',
     f.breakAt=2;stepJumpGame(s,0);assert.equal(f.active,true);
     stepJumpGame(s,0);assert.equal(f.active,false);
   }
+});
+
+test('첫 장면부터 횡스크롤 네온 시티의 넓은 가로 발판이 연결되며 오른쪽으로 진행한다',()=>{
+  const state=createJumpGame('horizontal-city','classic');
+  assert.ok(state.platforms.length>=3);
+  assert.equal(state.platforms[0].w,300);
+  assert.ok(state.platforms[1].x>state.platforms[0].x+state.platforms[0].w/2);
+  assert.ok(state.platforms[1].x-state.platforms[0].x>140);
+  for(let i=0;i<22;i++)stepJumpGame(state,2);
+  assert.ok(state.x>175);
+  assert.ok(state.bestX>175);
+  assert.ok(state.cameraX>=0);
+});
+test('두 번 점프 버튼을 누르면 공중에서 2단 점프가 발생하고 착지하면 충전된다',()=>{
+  const s=createJumpGame('double-jump','classic');
+  assert.equal(s.jumpsUsed,0);
+  stepJumpGame(s,4);assert.equal(s.jumpsUsed,1);
+  stepJumpGame(s,0);
+  stepJumpGame(s,4);
+  assert.equal(s.jumpsUsed,2);
+  assert.equal(s.event,'double');
+  const vy=s.vy;
+  stepJumpGame(s,0);stepJumpGame(s,4);
+  assert.ok(s.vy<vy,'2단 점프 이후에는 세 번째 점프가 발생하지 않습니다.');
+});
+test('추락하면 체크포인트에서 재개하고, 에너지 3칸이 소진되면 종료된다',()=>{
+  const s=createJumpGame('respawn','classic');
+  s.checkpoint={id:7,x:1200,y:190};
+  for(let i=0;i<3;i++){
+    s.x=1500;s.y=-80;s.vy=-10;s.grounded=false;s.groundId=null;
+    stepJumpGame(s,0);
+    assert.equal(s.hearts,2-i);
+    if(i<2){
+      assert.equal(s.x,1200);assert.equal(s.y,192);
+    }
+  }
+  assert.equal(s.over,true);
+});
+test('시즌 2 네온 점프 랭킹은 기존 기록을 보존하면서 새 기록만 표시한다',async()=>{
+  const {db,env}=fixture();
+  db.prepare('INSERT INTO players(id,token_hash,nickname,created_at) VALUES(?,?,?,?)').run('legacy','old-hash','예전점퍼','2026-11-05');
+  db.prepare('INSERT INTO game_sessions(id,player_id,game_id,mode,started_at,finished_at) VALUES(?,?,?,?,?,?)')
+    .run('old-session','legacy','ai-jump','classic',100,200);
+  db.prepare('INSERT INTO scores(id,session_id,player_id,game_id,mode,score,floors,perfects,combo,created_at,nickname) VALUES(?,?,?,?,?,?,?,?,?,?,?)')
+    .run('old-score','old-session','legacy','ai-jump','classic',99999,110,0,0,'2026-11-05','예전점퍼');
+  const previous=db.prepare('SELECT score,rules_version FROM scores WHERE id=?').get('old-score');
+  assert.equal(previous.score,99999);assert.equal(previous.rules_version,1);
+  const ranked=await api(env,'/api/rankings?game=ai-jump');
+  assert.equal(ranked.status,200);assert.equal(ranked.data.rankings.length,0);
+  const player=await api(env,'/api/players',{method:'POST',body:{nickname:'새점퍼'}});
+  const begun=await api(env,'/api/game/start',{method:'POST',token:player.data.token,body:{game:'ai-jump',mode:'classic'}});
+  assert.equal(begun.status,201);
+  assert.equal(db.prepare('SELECT rules_version FROM game_sessions WHERE id=?').get(begun.data.sessionId).rules_version,2);
 });
 test('압축한 입력 기록은 4096자 이하의 서버 요청으로 전송할 수 있다',()=>{
   const input=Array(MAX_TICKS.classic).fill(0).map((_,i)=>i%17===0?4:(i%3));
@@ -151,6 +206,10 @@ test('실행 화면은 모바일 조작과 도트 그래픽, 온라인 TOP10 기
   assert.match(js,/packJumpInputs\(trace\)/);
   assert.match(js,/requestAnimationFrame\(loop\)/);
   assert.match(css,/touch-action:none/);
+  assert.match(html,/width="1280" height="880"/);
+  assert.match(html,/NEON CITY/);
+  assert.match(js,/function backdrop/);
+  assert.match(js,/function platformDraw/);
   assert.match(html,/TOP 10/);
   // ESM import만 제거하면 다른 문법 오류도 Node가 판별할 수 있습니다.
   new Script(js.replace(/^import \{[\s\S]*?\} from '\.\/engine\.js';/m,''),{filename:'game.js'});
