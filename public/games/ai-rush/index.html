@@ -141,6 +141,7 @@ function hud(){
   $('hudPerfect').textContent=fmt(perfects);
   $('hudTime').textContent=(Math.max(0,mode==='daily'?Math.min(stepLeft,globalLeft):stepLeft)/1000).toFixed(1);
   $('comboPill').textContent=combo?'PERFECT ×'+combo:'COMBO 0';
+  if(mode==='daily')$('modePill').textContent='오늘의 도전 · '+Math.ceil(Math.max(0,globalLeft)/1000)+'초';
   const base=Math.max(0,mode==='daily'?Math.min(stepLeft,globalLeft):stepLeft);
   $('timerBar').style.transform='scaleX('+clamp(base/Math.max(1,stepDuration()),0,1)+')';
 }
