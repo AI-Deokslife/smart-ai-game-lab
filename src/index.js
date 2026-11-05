@@ -1,4 +1,5 @@
 import { GAMES, MODES, liveGame, validName, validateTowerResult, kstStartUtc } from './validation.js';
+import { adminAuthRoute, adminSignedIn } from './admin-auth.js';
 
 const BASE_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
 const reply = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: BASE_HEADERS });
@@ -24,11 +25,6 @@ async function playerFor(req, db) {
   if (!/^Bearer [0-9a-f]{64}$/.test(authorization)) return null;
   const digest = await hash(authorization.slice(7));
   return db.prepare('SELECT id, nickname, created_at FROM players WHERE token_hash = ?').bind(digest).first();
-}
-async function adminFor(req, env) {
-  const supplied = req.headers.get('x-admin-key') || '';
-  if (!env.ADMIN_KEY || supplied.length < 24 || supplied.length > 512) return false;
-  return (await hash(supplied)) === (await hash(env.ADMIN_KEY));
 }
 async function rankings(db, query) {
   const game = query.get('game') || 'ai-tower';
@@ -111,8 +107,15 @@ async function api(req, env) {
       .bind(scoreId, session.id, player.id, session.game_id, session.mode, score, floors, perfects, combo, created).run();
     return reply({ ok: true, score: { id: scoreId, score, floors, created_at: created } }, 201);
   }
+  if (path.startsWith('/api/admin/auth/')) return adminAuthRoute(req, env, path);
   if (path.startsWith('/api/admin/')) {
-    if (!(await adminFor(req, env))) return fail('관리자 인증에 실패했습니다.', 403);
+    if (!(await adminSignedIn(req, env))) return fail('관리자 로그인이 필요합니다.', 401);
+    if (method !== 'GET') {
+      const origin = req.headers.get('origin');
+      if ((origin && origin !== url.origin) || req.headers.get('x-requested-with') !== 'SmartAILabAdmin') {
+        return fail('잘못된 요청 출처입니다.', 403);
+      }
+    }
     if (path === '/api/admin/summary' && method === 'GET') {
       const [players, scores, sessions] = await Promise.all([
         env.DB.prepare('SELECT COUNT(*) AS n FROM players').first(),
