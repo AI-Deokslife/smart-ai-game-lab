@@ -33,7 +33,7 @@ test('기존 점수 마이그레이션은 참가자 닉네임을 채우되 점�
   sql.prepare('INSERT INTO scores(id,session_id,player_id,game_id,mode,score,floors,perfects,combo,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)')
     .run('score','session','p1','ai-tower','classic',177,1,1,1,'2026-11-05');
   sql.exec(migration('0004_score_nickname_snapshot.sql'));
-  assert.deepEqual(sql.prepare('SELECT nickname,score FROM scores').get(),{nickname:'현재이름',score:177});
+  assert.deepEqual({...sql.prepare('SELECT nickname,score FROM scores').get()},{nickname:'현재이름',score:177});
   sql.close();
 });
 test('같은 참가자의 모든 점수와 최고 점수를 구분하고, 닉네임 변경 후에도 이전 이름을 유지한다',async()=>{
