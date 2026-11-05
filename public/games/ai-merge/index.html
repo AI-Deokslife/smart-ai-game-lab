@@ -8,6 +8,61 @@
 <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
+
+<!-- 첫 실행: 원본 도트풍 세계관을 재해석한 실제 조작 가능한 타이틀 화면 -->
+<section id="titleScreen" class="pixel-title-screen" aria-label="AI 몬스터 합체 타이틀 화면">
+  <div class="title-scene" aria-hidden="true"></div>
+  <div class="title-pixels" aria-hidden="true"></div>
+  <a class="title-lab-brand" href="/" aria-label="SMART AI GAME LAB 메인 포털로 이동">
+    <span class="brand-squares" aria-hidden="true">▦ ▦</span> SMART AI GAME LAB <span class="brand-squares" aria-hidden="true">▦ ▦</span>
+  </a>
+  <div class="pixel-heading">
+    <div class="pixel-tag" aria-hidden="true">◆ MERGE &amp; EVOLVE ◆</div>
+    <h1><span class="pixel-ai">AI</span> <span class="pixel-monster">몬스터</span> <span class="pixel-merge">합체</span></h1>
+    <p>같은 몬스터를 합쳐 <strong>진화하라!</strong></p>
+  </div>
+  <div class="pixel-evolve-caption" aria-hidden="true">
+    <span>작은 로봇</span><strong>+</strong><span>작은 로봇</span><b>»</b><span>진화!</span>
+  </div>
+  <div class="pixel-title-actions">
+    <button id="titlePlayBtn" class="pixel-button pixel-start" type="button">
+      <span aria-hidden="true">▶</span> 게임 시작
+    </button>
+    <div class="pixel-sub-actions">
+      <button id="titleRankBtn" class="pixel-button pixel-rank" type="button"><span aria-hidden="true">🏆</span> 랭킹</button>
+      <button id="titleSettingsBtn" class="pixel-button pixel-settings" type="button"><span aria-hidden="true">⚙</span> 설정</button>
+    </div>
+  </div>
+  <footer class="title-school">은평메디텍고등학교 스마트AI과</footer>
+</section>
+
+<!-- 닉네임/모드 선택은 기존 게임의 시작 양식을 재사용합니다. -->
+<dialog id="titleSetupDialog" class="pixel-dialog" aria-label="게임 시작 설정">
+  <button id="titleSetupClose" class="dialog-close" type="button" aria-label="설정 창 닫기">✕</button>
+  <div id="titleSetupHost"></div>
+</dialog>
+<dialog id="titleRankDialog" class="pixel-dialog pixel-rank-dialog" aria-labelledby="titleRankHeading">
+  <button id="titleRankClose" class="dialog-close" type="button" aria-label="랭킹 창 닫기">✕</button>
+  <span class="dialog-kicker">HALL OF FAME</span><h2 id="titleRankHeading">명예의 전당 · TOP 10</h2>
+  <p class="dialog-info">게임 방식과 기록 유형을 선택하세요.</p>
+  <div class="dialog-filters">
+    <label for="titleRankMode">게임 방식</label>
+    <select id="titleRankMode"><option value="classic">자유 합체</option><option value="daily">오늘의 퍼즐</option></select>
+    <label for="titleRankView">기록 유형</label>
+    <select id="titleRankView"><option value="best">참가자별 최고</option><option value="all">모든 기록</option></select>
+  </div>
+  <ol id="titleRankList" class="title-rank-list" aria-live="polite"><li>랭킹을 불러오는 중...</li></ol>
+  <button id="titleRankReload" class="dialog-button" type="button">랭킹 새로고침 ↻</button>
+</dialog>
+<dialog id="titleSettingsDialog" class="pixel-dialog pixel-settings-dialog" aria-labelledby="titleSettingsHeading">
+  <button id="titleSettingsClose" class="dialog-close" type="button" aria-label="설정 창 닫기">✕</button>
+  <span class="dialog-kicker">GAME SETTINGS</span><h2 id="titleSettingsHeading">게임 설정</h2>
+  <p class="dialog-info">설정은 이 브라우저에 저장됩니다.</p>
+  <label class="dialog-toggle" for="titleSoundSwitch"><span><strong>효과음</strong><small>로봇 낙하·합체 소리</small></span><input id="titleSoundSwitch" type="checkbox" checked></label>
+  <label class="dialog-toggle" for="titleSpeedSwitch"><span><strong>빠른 연출</strong><small>합체·낙하 애니메이션 속도 높이기</small></span><input id="titleSpeedSwitch" type="checkbox"></label>
+  <button id="titleSettingsDone" class="dialog-button" type="button">설정 완료</button>
+</dialog>
+
 <header><a href="/" aria-label="게임 연구소 홈으로">← SMART AI GAME LAB</a><span>GAME 03 · AI 몬스터 합체</span></header>
 <main class="layout">
   <section class="board-panel" aria-label="AI 몬스터 합체 플레이">
