@@ -1,6 +1,7 @@
 import { GAMES, MODES, liveGame, validName, validateTowerResult, validateRushResult, kstStartUtc } from './validation.js';
 import { adminAuthRoute, adminSignedIn } from './admin-auth.js';
 import { catalogRoute, listedGames, visibleGame } from './catalog.js';
+import { replayMergeGame, mergeScoreSummary, MAX_TURNS } from '../public/games/ai-merge/engine.js';
 
 const BASE_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
 const reply = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: BASE_HEADERS });
@@ -38,8 +39,8 @@ async function rankings(db, query) {
   const cutoff = period === 'today' || mode === 'daily' ? kstStartUtc() : '1970-01-01T00:00:00.000Z';
   const select = 'SELECT s.player_id, COALESCE(s.nickname, p.nickname) AS nickname, s.score, s.floors, s.created_at FROM scores s JOIN players p ON p.id = s.player_id WHERE s.game_id = ? AND s.mode = ? AND s.created_at >= ?';
   const sql = view === 'all'
-    ? 'SELECT nickname,score,floors,created_at FROM ('+select+') ORDER BY score DESC, floors DESC, created_at ASC LIMIT 20'
-    : 'WITH records AS ('+select+'), ranked AS (SELECT player_id,nickname,score,floors,created_at,ROW_NUMBER() OVER (PARTITION BY player_id ORDER BY score DESC, floors DESC, created_at ASC) AS rn FROM records) SELECT nickname,score,floors,created_at FROM ranked WHERE rn=1 ORDER BY score DESC, floors DESC, created_at ASC LIMIT 20';
+    ? 'SELECT nickname,score,floors,created_at FROM ('+select+') ORDER BY score DESC, floors DESC, created_at ASC LIMIT 10'
+    : 'WITH records AS ('+select+'), ranked AS (SELECT player_id,nickname,score,floors,created_at,ROW_NUMBER() OVER (PARTITION BY player_id ORDER BY score DESC, floors DESC, created_at ASC) AS rn FROM records) SELECT nickname,score,floors,created_at FROM ranked WHERE rn=1 ORDER BY score DESC, floors DESC, created_at ASC LIMIT 10';
   const result = await db.prepare(sql).bind(game,mode,cutoff).all();
   return reply({ game, mode, period, view, rankings: (result.results || []).map((r,i)=>({rank:i+1,...r})) });
 }
@@ -97,10 +98,20 @@ async function api(req, env) {
     if (session.finished_at !== null) return fail('이미 제출된 기록입니다.', 409);
     const elapsed = Date.now() - session.started_at;
     if (elapsed < 0 || elapsed > 3600000) return fail('유효 시간이 지난 게임입니다.', 410);
-    const minMsPerStep = session.game_id === 'ai-rush' ? 100 : 180;
+    const minMsPerStep = session.game_id === 'ai-rush' ? 100 : session.game_id === 'ai-merge' ? 70 : 180;
     if (elapsed < Math.max(250, (Number(data.floors) || 0) * minMsPerStep)) return fail('비정상적으로 빠른 게임 기록입니다.', 422);
-    if (!['ai-tower','ai-rush'].includes(session.game_id)) return fail('게임별 검증기가 준비되지 않았습니다.', 501);
-    const result = session.game_id === 'ai-rush' ? validateRushResult(data) : validateTowerResult(data);
+    if (!['ai-tower','ai-rush','ai-merge'].includes(session.game_id)) return fail('게임별 검증기가 준비되지 않았습니다.',501);
+    let result;
+    if(session.game_id==='ai-merge'){
+      const seed = session.mode==='daily' ? new Date(session.started_at+9*60*60*1000).toISOString().slice(0,10) : session.id;
+      const replay=replayMergeGame(seed,session.mode,data.moves);
+      if(!replay)return fail('AI 몬스터 합체 플레이 기록이 올바르지 않습니다.',422);
+      const expected=mergeScoreSummary(replay);
+      const matches=['score','floors','perfects','combo'].every(key=>Number.isSafeInteger(data[key])&&data[key]===expected[key]);
+      result=matches?{ok:true,value:expected}:{ok:false,error:'서버에서 재현한 게임 점수와 제출 기록이 다릅니다.'};
+    } else {
+      result=session.game_id==='ai-rush'?validateRushResult(data):validateTowerResult(data);
+    }
     if (!result.ok) return fail(result.error, 422);
     const { score, floors, perfects, combo } = result.value, created = nowIso(), scoreId = uid();
     // 한 번 제출된 세션은 원자적으로 완료 처리하며 중복 요청을 방지합니다.

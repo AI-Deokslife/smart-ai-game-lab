@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c1534">
+<meta name="description" content="AI 몬스터 합체 - 귀여운 로봇을 떨어뜨리고 같은 등급끼리 합쳐 진화하는 무료 퍼즐 게임">
+<title>AI 몬스터 합체 | SMART AI GAME LAB</title>
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<header><a href="/" aria-label="게임 연구소 홈으로">← SMART AI GAME LAB</a><span>GAME 03 · AI 몬스터 합체</span></header>
+<main class="layout">
+  <section class="board-panel" aria-label="AI 몬스터 합체 플레이">
+    <div class="stats" aria-live="polite">
+      <div class="stat"><strong id="score">0</strong><small>점수</small></div>
+      <div class="stat"><strong id="turns">0</strong><small>놓은 횟수</small></div>
+      <div class="stat"><strong id="merges">0</strong><small>합체</small></div>
+      <div class="stat"><strong id="best">0</strong><small>최고 점수</small></div>
+    </div>
+    <div class="game-shell">
+      <div class="game-top">
+        <div class="next">
+          <div id="nextBot" class="next-card" aria-hidden="true"></div>
+          <div><span class="tiny">다음 로봇</span><b id="nextName">Lv.1 새싹봇</b><div class="mode-tag" id="modeTag">자유 합체</div></div>
+        </div>
+        <div class="actions">
+          <button id="soundBtn" class="round-btn" type="button" aria-label="효과음 켜고 끄기">소리 켜짐</button>
+          <button id="quitBtn" class="round-btn" type="button">종료</button>
+        </div>
+      </div>
+      <div id="board" class="board" role="button" tabindex="0" aria-label="로봇을 떨어뜨릴 열을 터치하거나 키보드로 선택하세요">
+        <div id="laneArrow" class="lane-arrow"><span>▼</span></div>
+        <div id="grid" class="grid" aria-hidden="true"></div>
+        <div id="gameToast" class="toast" aria-live="polite"></div>
+        <div id="startOverlay" class="overlay">
+          <div class="modal">
+            <div class="big-icon" aria-hidden="true">🤖</div>
+            <span class="kicker">MERGE &amp; EVOLVE!</span><h2>AI 몬스터 합체</h2>
+            <p>같은 등급의 로봇을 붙여 합체시키세요.<br>연쇄 합체로 새로운 몬스터를 진화시켜 보세요!</p>
+            <label for="nickname">닉네임 (2~12자)</label>
+            <input id="nickname" name="nickname" maxlength="12" value="AI 탐험가" autocomplete="nickname">
+            <label for="modeSelect">도전 방식</label>
+            <select id="modeSelect"><option value="classic">자유 합체 · 최대 160번</option><option value="daily">오늘의 퍼즐 · 35번</option></select>
+            <button class="btn" id="startBtn" type="button">합체 시작!</button>
+            <div id="startMsg" class="toastMsg" role="status"></div>
+          </div>
+        </div>
+        <div id="endOverlay" class="overlay" hidden>
+          <div class="modal">
+            <span class="kicker">MERGE COMPLETE</span><h2>도전 결과!</h2>
+            <div id="endScore">0점</div>
+            <p id="endDetail">로봇을 멋지게 진화시켰습니다.</p>
+            <div id="saveState" role="status">온라인 랭킹에 저장 중...</div>
+            <div class="actions">
+              <button class="btn" id="againBtn" type="button">다시 도전</button>
+              <button class="btn secondary" id="shareBtn" type="button">기록 공유</button>
+            </div>
+            <a href="/" class="btn secondary home-link">다른 게임</a>
+          </div>
+        </div>
+      </div>
+      <div class="controls" aria-label="열 선택과 로봇 낙하">
+        <button class="control" id="leftBtn" type="button" aria-label="왼쪽 열 선택, A키">← A</button>
+        <button class="control primary" id="dropBtn" type="button" aria-label="로봇 떨어뜨리기, 스페이스 키">↓ 떨어뜨리기</button>
+        <button class="control" id="rightBtn" type="button" aria-label="오른쪽 열 선택, D키">D →</button>
+      </div>
+      <p class="below">원하는 열을 바로 터치해도 됩니다. PC: A/D 또는 ←/→로 이동 · 스페이스/엔터로 낙하</p>
+    </div>
+  </section>
+  <aside class="sidebar">
+    <div class="kicker">SMART AI · ARCADE 03</div>
+    <h1>합치고, <em>진화하라!</em></h1>
+    <p class="intro">같은 종류의 AI 로봇이 만나면 새로운 몬스터로 합체합니다. 열을 선택해 떨어뜨리고 연쇄 진화를 노려 보세요.</p>
+    <section class="card">
+      <div class="headrow"><h2>온라인 명예의 전당 · TOP 10</h2><button id="refreshRank" class="round-btn" type="button">새로고침</button></div>
+      <div class="ranking-filters">
+        <select id="rankMode" aria-label="랭킹 모드"><option value="classic">자유 합체</option><option value="daily">오늘의 퍼즐</option></select>
+        <select id="rankView" aria-label="랭킹 기록 방식"><option value="best">참가자 최고</option><option value="all">모든 기록</option></select>
+      </div>
+      <ol id="rankingList" class="ranking-list" aria-live="polite"><li><span class="muted">랭킹을 불러오는 중...</span></li></ol>
+      <p id="rankMsg" class="help">온라인 기록 기준 · 최고 10위까지 표시</p>
+    </section>
+    <section class="card">
+      <h2>합체 진화 도감</h2>
+      <p class="help">같은 레벨 2개가 만나면 레벨이 하나 올라갑니다. 빈칸이 없어지거나 정해진 횟수를 모두 사용하면 게임 종료!</p>
+      <div id="evolution" class="evolution"></div>
+    </section>
+    <section class="card">
+      <details open><summary>게임 방법</summary>
+        <div class="chips"><span>1 · 열 선택</span><span>2 · 로봇 놓기</span><span>3 · 같은 등급 합체</span><span>4 · 연쇄 진화</span></div>
+        <p class="help instructions">작은 로봇 2개가 하나의 상위 로봇으로 변신합니다. 여러 합체가 연속되면 점수가 크게 올라갑니다. 오늘의 퍼즐은 모든 참가자에게 같은 로봇 순서가 나옵니다.</p>
+      </details>
+    </section>
+    <p class="help">은평메디텍고등학교 스마트AI과 · SMART AI GAME LAB<br><a href="/">게임 포털로 돌아가기</a></p>
+  </aside>
+</main>
+<script src="/shared/lab-sdk.js"></script>
+<script type="module" src="./game.js"></script>
+</body></html>

@@ -9,7 +9,7 @@ import { validateRushResult, rushScore } from '../src/validation.js';
 
 function fixture(){
   const raw=new DatabaseSync(':memory:');
-  for(const name of ['0001_init.sql','0002_admin_login.sql','0003_game_catalog.sql','0004_score_nickname_snapshot.sql'])
+  for(const name of ['0001_init.sql','0002_admin_login.sql','0003_game_catalog.sql','0004_score_nickname_snapshot.sql','0005_publish_ai_merge.sql'])
     raw.exec(readFileSync(new URL('../migrations/'+name,import.meta.url),'utf8'));
   const DB={raw,prepare(sql){
     let params=[];
@@ -31,12 +31,12 @@ async function run(env,path,opts={}){
   const response=await worker.fetch(request(path,opts),env);
   return {status:response.status,data:await response.json(),cookie:response.headers.get('set-cookie')?.split(';')[0]};
 }
-test('기본 게임 카탈로그는 AI 타워와 AI 러시만 공개한다',async()=>{
+test('기본 게임 카탈로그는 AI 타워·AI 러시·AI 몬스터 합체를 공개한다',async()=>{
   const env=fixture(),result=await run(env,'/api/games');
   assert.equal(result.status,200);
-  assert.deepEqual(result.data.games.map(g=>g.id),['ai-tower','ai-rush']);
+  assert.deepEqual(result.data.games.map(g=>g.id),['ai-tower','ai-rush','ai-merge']);
   assert.equal(result.data.games[1].supportsRanking,true);
-  const stats=await run(env,'/api/stats');assert.equal(stats.data.games,2);
+  const stats=await run(env,'/api/stats');assert.equal(stats.data.games,3);
 });
 test('관리자 게임 등록, 정렬 변경, 비공개 처리 및 기존 기록 보존',async()=>{
   const env=fixture();
@@ -51,7 +51,7 @@ test('관리자 게임 등록, 정렬 변경, 비공개 처리 및 기존 기록
   assert.equal(created.status,201);
   assert.equal(created.data.game.path,'/games/student-jump/');
   assert.equal((await run(env,'/api/admin/games',{method:'POST',cookie,body:newGame})).status,409);
-  assert.equal((await run(env,'/api/games')).data.games.length,2);
+  assert.equal((await run(env,'/api/games')).data.games.length,3);
   const invalid=await run(env,'/api/admin/games/student-jump',{method:'PATCH',cookie,body:{...newGame,title:'<script>',enabled:true}});
   assert.equal(invalid.status,200); // 제목은 textContent로 안전하게 출력됨
   const published=await run(env,'/api/games');
@@ -59,7 +59,7 @@ test('관리자 게임 등록, 정렬 변경, 비공개 처리 및 기존 기록
   assert.equal((await run(env,'/api/game/start',{method:'POST',body:{game:'student-jump',mode:'classic'}})).status,401);
   const hidden=await run(env,'/api/admin/games/student-jump',{method:'PATCH',cookie,body:{...newGame,enabled:false}});
   assert.equal(hidden.status,200);
-  assert.equal((await run(env,'/api/games')).data.games.length,2);
+  assert.equal((await run(env,'/api/games')).data.games.length,3);
   assert.equal((await run(env,'/api/admin/games/student-jump',{method:'PATCH',body:{...newGame,enabled:true}})).status,401);
   const attempted=await run(env,'/api/admin/games',{method:'POST',cookie,body:{...newGame,id:'../../../admin'}});
   assert.equal(attempted.status,400);

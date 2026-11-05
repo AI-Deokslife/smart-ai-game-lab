@@ -1,7 +1,7 @@
 export const GAMES = [
   { id: 'ai-tower', title: 'AI 타워 챌린지', subtitle: '블록을 쌓아 최고 기록에 도전', path: '/games/ai-tower/', live: true },
   { id: 'ai-rush', title: 'AI 러시', subtitle: 'A·D 또는 좌우 터치로 네온 계단을 달려라', path: '/games/ai-rush/', live: true },
-  { id: 'ai-merge', title: 'AI 몬스터 합체', subtitle: '로봇을 합쳐 진화시키는 퍼즐', path: null, live: false },
+  { id: 'ai-merge', title: 'AI 몬스터 합체', subtitle: '로봇을 떨어뜨려 같은 등급끼리 합체! 연쇄 진화 퍼즐', path: '/games/ai-merge/', live: true },
 ];
 export const MODES = ['classic', 'daily'];
 export const liveGame = id => GAMES.some(game => game.id === id && game.live);
