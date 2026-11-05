@@ -12,7 +12,7 @@ test('암호화 반복 횟수는 Cloudflare Workers PBKDF2 최대 10만 회를 �
 
 function envFixture() {
   const sqlite = new DatabaseSync(':memory:');
-  for (const filename of ['0001_init.sql','0002_admin_login.sql','0003_game_catalog.sql','0004_score_nickname_snapshot.sql'])
+  for (const filename of ['0001_init.sql','0002_admin_login.sql','0003_game_catalog.sql','0004_score_nickname_snapshot.sql','0005_publish_ai_merge.sql'])
     sqlite.exec(readFileSync(new URL('../migrations/'+filename,import.meta.url),'utf8'));
   const db = {
     raw:sqlite,
