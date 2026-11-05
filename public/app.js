@@ -16,7 +16,7 @@ const el=(tag,className,text)=>{
 };
 function drawCard(g,index){
   const card=el('article','game-card live');
-  const art=el('div','game-art '+(['tower','rush','merge'].includes(g.visual)?g.visual+'-art':'neon-art'));
+  const art=el('div','game-art '+(['tower','rush','merge','jump'].includes(g.visual)?g.visual+'-art':'neon-art'));
   const label=el('span','art-bubble',g.supportsRanking?'NEW · 플레이 가능':'플레이 가능');
   art.append(label);
   if(g.visual==='tower'){
@@ -31,12 +31,17 @@ function drawCard(g,index){
     const bots=el('div','merge-bots');
     for(const symbol of ['●','✚','◆'])bots.append(el('span','',symbol));
     art.append(bots);
+  } else if(g.visual==='jump'){
+    const platforms=el('div','jump-platforms');
+    for(let i=0;i<5;i++)platforms.append(el('i'));
+    art.append(platforms,el('span','jump-runner','✦'),el('span','jump-star','★'));
   } else art.append(el('div','visual-mark',g.visual==='puzzle'?'◈':'✦'));
   const meta=el('div','game-meta');
   meta.append(el('span','game-number','GAME '+String(index+1).padStart(2,'0')),el('h3','',g.title),el('p','',g.subtitle));
   const tags=el('div','tags');
   for(const tag of (g.supportsRanking?['모바일','온라인 랭킹']:['신규 작품','바로 실행']))tags.append(el('span','',tag));
   if(g.id==='ai-rush')tags.append(el('span','','A · D'));
+  if(g.id==='ai-jump')tags.append(el('span','','A · D · SPACE'));
   meta.append(tags);
   const link=el('a','game-go','플레이하기 ↗');link.href=g.path;meta.append(link);
   card.append(art,meta);

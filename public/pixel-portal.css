@@ -195,3 +195,17 @@ body.pixel-portal{background:#081735;color:#f7fcff;font-family:'Malgun Gothic','
  .pixel-portal .hero-sparks i,.pixel-portal .hero-scroll{animation:none}
  .pixel-portal .pixel-action,.pixel-portal .game-card{transition:none}
 }
+/* GAME 04 — 고유한 네온 점프 카드 아트 */
+.pixel-portal .jump-art{position:relative;background:linear-gradient(#33449a,#5962bc 52%,#342a82 100%);overflow:hidden}
+.pixel-portal .jump-art:after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,#b5ecff0b 0 2px,transparent 2px 25px);z-index:0}
+.pixel-portal .jump-platforms{position:absolute;inset:0;pointer-events:none;z-index:1}
+.pixel-portal .jump-platforms i{position:absolute;width:105px;height:15px;border:3px solid #e6fff5;border-bottom:7px solid #2887a5;background:#6decd6;box-shadow:4px 6px 0 #1a3168}
+.pixel-portal .jump-platforms i:nth-child(1){left:10%;bottom:13%}
+.pixel-portal .jump-platforms i:nth-child(2){left:43%;bottom:29%;background:#ddb4ff;border-bottom-color:#806ab6}
+.pixel-portal .jump-platforms i:nth-child(3){left:16%;bottom:45%;background:#ffd58a;border-bottom-color:#af6893}
+.pixel-portal .jump-platforms i:nth-child(4){left:56%;bottom:62%}
+.pixel-portal .jump-platforms i:nth-child(5){left:36%;bottom:82%;width:80px;background:#c59bff}
+.pixel-portal .jump-runner{position:absolute;z-index:2;left:60%;bottom:39%;font-size:52px;font-weight:1000;color:#b5fff1;text-shadow:5px 5px 0 #143d7c,0 0 18px #b0fff0;transform:rotate(-10deg);animation:jump-card-float 1.7s ease-in-out infinite}
+.pixel-portal .jump-star{position:absolute;z-index:2;right:24%;top:14%;color:#ffe38c;font-size:41px;text-shadow:3px 4px #70439c}
+@keyframes jump-card-float{0%,100%{transform:translateY(0) rotate(-10deg)}50%{transform:translateY(-14px) rotate(-5deg)}}
+@media(prefers-reduced-motion:reduce){.pixel-portal .jump-runner{animation:none}}

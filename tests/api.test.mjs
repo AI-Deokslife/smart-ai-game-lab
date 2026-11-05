@@ -11,6 +11,7 @@ function mockD1() {
   sqlite.exec(readFileSync(new URL('../migrations/0003_game_catalog.sql', import.meta.url), 'utf8'));
   sqlite.exec(readFileSync(new URL('../migrations/0004_score_nickname_snapshot.sql', import.meta.url), 'utf8'));
   sqlite.exec(readFileSync(new URL('../migrations/0005_publish_ai_merge.sql', import.meta.url), 'utf8'));
+  sqlite.exec(readFileSync(new URL('../migrations/0006_publish_ai_jump.sql', import.meta.url), 'utf8'));
   return {
     raw: sqlite,
     prepare(query) {

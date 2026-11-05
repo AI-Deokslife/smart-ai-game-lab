@@ -3,7 +3,7 @@
 import { GAMES } from './validation.js';
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const err=(message,status=400)=>json({error:message},status);
-export const THEMES=['tower','rush','merge','neon','puzzle'];
+export const THEMES=['tower','rush','merge','jump','neon','puzzle'];
 const idOk=v=>typeof v==='string'&&/^[a-z][a-z0-9-]{1,30}$/.test(v)&&!v.endsWith('-');
 const txt=(v,max)=>typeof v==='string'&&v.trim().length>0&&v.trim().length<=max?v.trim():null;
 export function normalizeGame(input,idOverride=null) {
