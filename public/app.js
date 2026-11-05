@@ -77,6 +77,8 @@ async function loadRanking(){
   const wait=el('li','empty-rank','온라인 순위를 불러오는 중입니다.');list.append(wait);
   const selected=games.find(x=>x.id===game);
   $('rankTitle').textContent=selected?selected.title+' 랭킹':'게임별 랭킹';
+  const dailyOption=$('rankMode').querySelector('option[value="daily"]');
+  if(dailyOption)dailyOption.textContent=game==='ai-rush'?'45초 오늘의 도전':'30층 미션';
   if(!game||!selected){list.replaceChildren();list.append(el('li','empty-rank','랭킹이 제공되는 게임이 없습니다.'));return;}
   try{
     const data=await json('/api/rankings?game='+encodeURIComponent(game)+'&mode='+encodeURIComponent(mode)+'&period='+encodeURIComponent(period));
