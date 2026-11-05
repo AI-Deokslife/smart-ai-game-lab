@@ -86,3 +86,7 @@ summary{cursor:pointer;font-weight:900;color:#e4f5ff}details[open] summary{margi
 .stats .stat strong{font-variant-numeric:tabular-nums}
 @media(max-width:370px){.game-top .actions{max-width:160px;gap:3px}.game-top .round-btn{font-size:9px;padding:7px}.next-card{width:53px;height:53px}.next b{font-size:13px}.merge-burst{width:50px;height:50px}}
 @media(prefers-reduced-motion:reduce){.board.impact,.merge-burst{animation:none}.ghost-token{transition:none}}
+
+.bot .bot-symbol{position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);font-size:11px;font-weight:1000;color:#fffbee;text-shadow:0 1px 3px #1d356c,0 0 7px #ffffff8c;pointer-events:none}
+.bot.lv7 .bot-symbol,.bot.lv8 .bot-symbol,.bot.lv9 .bot-symbol{font-size:14px}
+@media(max-width:370px){.bot .bot-symbol{font-size:9px}.bot.lv7 .bot-symbol,.bot.lv8 .bot-symbol,.bot.lv9 .bot-symbol{font-size:11px}}
