@@ -3,7 +3,9 @@
 const H = { 'Content-Type':'application/json; charset=utf-8', 'Cache-Control':'no-store', 'X-Content-Type-Options':'nosniff' };
 const TTL = 8 * 60 * 60 * 1000;
 const BLOCK = 15 * 60 * 1000;
-const ROUNDS = 120000;
+// Cloudflare Workers rejects a single PBKDF2 deriveBits call above 100,000 iterations.
+// Keep in sync with tests/admin-auth.test.mjs and the Workers runtime limit.
+const ROUNDS = 100000;
 const enc = new TextEncoder();
 const toHex = b => Array.from(new Uint8Array(b), x => x.toString(16).padStart(2,'0')).join('');
 const json = (data, status=200, cookie='') => new Response(JSON.stringify(data), {status,headers:{...H,...(cookie?{'Set-Cookie':cookie}:{})}});
