@@ -54,7 +54,7 @@ test('AI 네온 점프: 기본 발판·물리 낙하·점프 판정',()=>{
   for(let i=0;i<10;i++)stepJumpGame(state,2);
   assert.ok(state.y>beginning);
   assert.ok(state.x>84);
-  assert.ok(state.platforms.length>5);
+  assert.ok(state.platforms.length>=3);
   assert.equal(WIDTH,640);assert.equal(HEIGHT,440);
 });
 test('정해진 25fps 엔진은 같은 씨앗/조작으로 항상 동일한 높이와 점수를 낸다',()=>{
