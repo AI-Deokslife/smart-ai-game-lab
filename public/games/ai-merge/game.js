@@ -5,7 +5,7 @@ const colors=['','#73e9de','#9cb3ff','#ffb2d0','#ffd47d','#a8e9a3','#c9aaff','#f
 const symbols=['','✦','ϟ','◎','★','❀','✧','▲','≈','♛'];
 const fmt=n=>Number(n).toLocaleString('ko-KR');
 const localKey=m=>'smart-ai-merge-high-'+m;
-let state=null,selected=2,session=null,playing=false,soundEnabled=true,mode='classic',saveBusy=false,audio=null,toastTimer=0;
+let state=null,selected=2,session=null,playing=false,soundEnabled=localStorage.getItem('smart-ai-merge-sound')!=='false',mode='classic',saveBusy=false,audio=null,toastTimer=0;
 let animating=false,queuedColumn=null,fastMode=localStorage.getItem('smart-ai-merge-fast')==='true';
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 $('nickname').value=localStorage.getItem('smart-ai-merge-name')||'AI 탐험가';
@@ -170,6 +170,9 @@ async function start(){
   state=createMergeGame(seed,mode);
   selected=2;playing=true;saveBusy=false;animating=false;queuedColumn=null;
   $('startOverlay').hidden=true;$('endOverlay').hidden=true;
+  if($('titleSetupDialog').open)$('titleSetupDialog').close();
+  $('titleScreen').hidden=true;
+  document.body.classList.add('merge-playing');
   $('modeTag').textContent=mode==='daily'?'오늘의 퍼즐 · 35번':'자유 합체 · 160번';
   $('rankMode').value=mode;
   draw();loadRankings();sound(700,.12);
@@ -275,17 +278,18 @@ document.addEventListener('keydown',e=>{
   if(e.key===' '||e.key==='Enter'){e.preventDefault();drop();}
 });
 $('startBtn').addEventListener('click',start);
-$('againBtn').addEventListener('click',()=>{if(saveBusy)return;$('endOverlay').hidden=true;$('startOverlay').hidden=false;$('startMsg').textContent='';});
+$('againBtn').addEventListener('click',()=>{if(saveBusy)return;$('endOverlay').hidden=true;$('startOverlay').hidden=false;$('startMsg').textContent='';$('titleScreen').hidden=false;document.body.classList.remove('merge-playing');$('titleSetupDialog').showModal();});
 $('quitBtn').addEventListener('click',()=>{if(playing&&confirm('지금까지의 점수를 저장하고 종료하시겠습니까?'))finish();});
 $('speedBtn').addEventListener('click',()=>{
   fastMode=!fastMode;
   localStorage.setItem('smart-ai-merge-fast',String(fastMode));
   $('speedBtn').textContent=fastMode?'연출 빠름':'연출 보통';
   $('speedBtn').setAttribute('aria-pressed',String(fastMode));
+  $('titleSpeedSwitch').checked=fastMode;
 });
 $('speedBtn').textContent=fastMode?'연출 빠름':'연출 보통';
 $('speedBtn').setAttribute('aria-pressed',String(fastMode));
-$('soundBtn').addEventListener('click',()=>{soundEnabled=!soundEnabled;$('soundBtn').textContent=soundEnabled?'소리 켜짐':'소리 꺼짐';});
+$('soundBtn').addEventListener('click',()=>{soundEnabled=!soundEnabled;localStorage.setItem('smart-ai-merge-sound',String(soundEnabled));$('soundBtn').textContent=soundEnabled?'소리 켜짐':'소리 꺼짐';$('titleSoundSwitch').checked=soundEnabled;});
 $('refreshRank').addEventListener('click',loadRankings);
 $('rankMode').addEventListener('change',loadRankings);
 $('rankView').addEventListener('change',loadRankings);
@@ -294,4 +298,77 @@ $('shareBtn').addEventListener('click',async()=>{
   try{if(navigator.share)await navigator.share({title:'AI 몬스터 합체',text});else{await navigator.clipboard.writeText(text);$('saveState').textContent='공유 문구를 복사했습니다.';}}
   catch{}
 });
+
+/* 시작 화면: 기존 플레이 기능·ID·닉네임·서버 API를 그대로 재사용합니다. */
+$('titleSetupHost').append($('startOverlay'));
+$('titlePlayBtn').addEventListener('click',()=>{
+  $('titleSetupDialog').showModal();
+  $('nickname').focus();
+});
+$('titleSetupClose').addEventListener('click',()=>$('titleSetupDialog').close());
+
+/* 도트 시작화면 랭킹: 기존 온라인 TOP 10을 동일하게 조회합니다. */
+async function loadTitleRanks(){
+  const list=$('titleRankList');
+  list.replaceChildren();
+  const waiting=document.createElement('li');
+  waiting.textContent='온라인 랭킹을 불러오는 중...';list.append(waiting);
+  try{
+    const mode=$('titleRankMode').value,view=$('titleRankView').value;
+    const data=await SmartAILab.ranking('ai-merge',mode,'all',view);
+    if(mode!==$('titleRankMode').value||view!==$('titleRankView').value)return;
+    list.replaceChildren();
+    if(!data.rankings.length){
+      const li=document.createElement('li');
+      li.textContent='아직 기록이 없습니다. 첫 번째 도전에 참여하세요!';list.append(li);
+      return;
+    }
+    for(const item of data.rankings.slice(0,10)){
+      const row=document.createElement('li');
+      const number=document.createElement('strong'),name=document.createElement('span'),score=document.createElement('strong');
+      number.textContent=String(item.rank).padStart(2,'0');
+      name.textContent=item.nickname;
+      score.textContent=fmt(item.score)+'점';
+      row.append(number,name,score);
+      list.append(row);
+    }
+  }catch(error){
+    list.replaceChildren();
+    const message=document.createElement('li');
+    message.textContent='현재 랭킹을 조회할 수 없습니다. 연결을 확인해 주세요.';
+    list.append(message);
+  }
+}
+$('titleRankBtn').addEventListener('click',()=>{
+  $('titleRankDialog').showModal();
+  loadTitleRanks();
+});
+$('titleRankClose').addEventListener('click',()=>$('titleRankDialog').close());
+$('titleRankReload').addEventListener('click',loadTitleRanks);
+$('titleRankMode').addEventListener('change',loadTitleRanks);
+$('titleRankView').addEventListener('change',loadTitleRanks);
+
+/* 설정: 타이틀과 게임 중 버튼을 연동하고 브라우저에 유지합니다. */
+$('titleSettingsBtn').addEventListener('click',()=>{
+  $('titleSoundSwitch').checked=soundEnabled;
+  $('titleSpeedSwitch').checked=fastMode;
+  $('titleSettingsDialog').showModal();
+});
+$('titleSettingsClose').addEventListener('click',()=>$('titleSettingsDialog').close());
+$('titleSettingsDone').addEventListener('click',()=>$('titleSettingsDialog').close());
+$('titleSoundSwitch').addEventListener('change',()=>{
+  soundEnabled=$('titleSoundSwitch').checked;
+  localStorage.setItem('smart-ai-merge-sound',String(soundEnabled));
+  $('soundBtn').textContent=soundEnabled?'소리 켜짐':'소리 꺼짐';
+});
+$('titleSpeedSwitch').addEventListener('change',()=>{
+  fastMode=$('titleSpeedSwitch').checked;
+  localStorage.setItem('smart-ai-merge-fast',String(fastMode));
+  $('speedBtn').textContent=fastMode?'연출 빠름':'연출 보통';
+  $('speedBtn').setAttribute('aria-pressed',String(fastMode));
+});
+$('soundBtn').textContent=soundEnabled?'소리 켜짐':'소리 꺼짐';
+$('titleSoundSwitch').checked=soundEnabled;
+$('titleSpeedSwitch').checked=fastMode;
+
 setupEvolution();loadRankings();
