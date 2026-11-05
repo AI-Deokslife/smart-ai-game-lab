@@ -1,5 +1,6 @@
-import { GAMES, MODES, liveGame, validName, validateTowerResult, kstStartUtc } from './validation.js';
+import { GAMES, MODES, liveGame, validName, validateTowerResult, validateRushResult, kstStartUtc } from './validation.js';
 import { adminAuthRoute, adminSignedIn } from './admin-auth.js';
+import { catalogRoute, listedGames, visibleGame } from './catalog.js';
 
 const BASE_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
 const reply = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: BASE_HEADERS });
@@ -31,6 +32,7 @@ async function rankings(db, query) {
   const mode = query.get('mode') || 'classic';
   const period = query.get('period') || 'all';
   if (!liveGame(game) || !MODES.includes(mode) || !['all', 'today'].includes(period)) return fail('올바르지 않은 랭킹 조건입니다.');
+  if (!(await visibleGame(db,game))) return fail('비공개 게임입니다.',404);
   const cutoff = period === 'today' || mode === 'daily' ? kstStartUtc() : '1970-01-01T00:00:00.000Z';
   const stmt = db.prepare(`WITH ranked AS (
     SELECT s.player_id, p.nickname, s.score, s.floors, s.created_at,
@@ -45,15 +47,15 @@ async function rankings(db, query) {
 async function api(req, env) {
   if (!env.DB) return fail('D1 데이터베이스 연결이 필요합니다. 배포 설정을 확인하세요.', 503);
   const url = new URL(req.url), path = url.pathname, method = req.method;
-  if (path === '/api/health' && method === 'GET') return reply({ ok: true, service: 'SMART AI GAME LAB', games: GAMES.filter(x => x.live).length });
-  if (path === '/api/games' && method === 'GET') return reply({ games: GAMES });
+  if (path === '/api/health' && method === 'GET') return reply({ ok: true, service: 'SMART AI GAME LAB', games: (await listedGames(env.DB)).length });
+  if (path === '/api/games' && method === 'GET') return catalogRoute(req, env, path, bodyJson);
   if (path === '/api/rankings' && method === 'GET') return rankings(env.DB, url.searchParams);
   if (path === '/api/stats' && method === 'GET') {
     const [players, plays] = await Promise.all([
       env.DB.prepare('SELECT COUNT(*) AS count FROM players').first(),
       env.DB.prepare('SELECT COUNT(*) AS count FROM scores').first(),
     ]);
-    return reply({ players: players?.count || 0, plays: plays?.count || 0, games: GAMES.filter(x => x.live).length });
+    return reply({ players: players?.count || 0, plays: plays?.count || 0, games: (await listedGames(env.DB)).length });
   }
   if (path === '/api/players' && method === 'POST') {
     const data = await bodyJson(req), nickname = validName(data.nickname);
@@ -78,7 +80,7 @@ async function api(req, env) {
     const player = await playerFor(req, env.DB);
     if (!player) return fail('참가자 등록이 필요합니다.', 401);
     const data = await bodyJson(req), game = data.game, mode = data.mode;
-    if (!liveGame(game) || !MODES.includes(mode)) return fail('지원하지 않는 게임 또는 모드입니다.');
+    if (!liveGame(game) || !MODES.includes(mode) || !(await visibleGame(env.DB,game))) return fail('지원하지 않거나 비공개 게임입니다.');
     const count = await env.DB.prepare('SELECT COUNT(*) AS n FROM game_sessions WHERE player_id = ? AND started_at > ?').bind(player.id, Date.now() - 60000).first();
     if ((count?.n || 0) >= 10) return fail('잠시 후 다시 시도해주세요.', 429);
     const id = uid(), started = Date.now();
@@ -95,9 +97,10 @@ async function api(req, env) {
     if (session.finished_at !== null) return fail('이미 제출된 기록입니다.', 409);
     const elapsed = Date.now() - session.started_at;
     if (elapsed < 0 || elapsed > 3600000) return fail('유효 시간이 지난 게임입니다.', 410);
-    if (elapsed < Math.max(250, (Number(data.floors) || 0) * 180)) return fail('비정상적으로 빠른 게임 기록입니다.', 422);
-    if (session.game_id !== 'ai-tower') return fail('게임별 검증기가 준비되지 않았습니다.', 501);
-    const result = validateTowerResult(data);
+    const minMsPerStep = session.game_id === 'ai-rush' ? 100 : 180;
+    if (elapsed < Math.max(250, (Number(data.floors) || 0) * minMsPerStep)) return fail('비정상적으로 빠른 게임 기록입니다.', 422);
+    if (!['ai-tower','ai-rush'].includes(session.game_id)) return fail('게임별 검증기가 준비되지 않았습니다.', 501);
+    const result = session.game_id === 'ai-rush' ? validateRushResult(data) : validateTowerResult(data);
     if (!result.ok) return fail(result.error, 422);
     const { score, floors, perfects, combo } = result.value, created = nowIso(), scoreId = uid();
     // 한 번 제출된 세션은 원자적으로 완료 처리하며 중복 요청을 방지합니다.
@@ -115,6 +118,10 @@ async function api(req, env) {
       if ((origin && origin !== url.origin) || req.headers.get('x-requested-with') !== 'SmartAILabAdmin') {
         return fail('잘못된 요청 출처입니다.', 403);
       }
+    }
+    if (path.startsWith('/api/admin/games')) {
+      const res = await catalogRoute(req, env, path, bodyJson);
+      if (res) return res;
     }
     if (path === '/api/admin/summary' && method === 'GET') {
       const [players, scores, sessions] = await Promise.all([
@@ -139,7 +146,16 @@ async function api(req, env) {
 export default {
   async fetch(request, env) {
     const path = new URL(request.url).pathname;
-    if (!path.startsWith('/api/')) return env.ASSETS.fetch(request);
+    if (!path.startsWith('/api/')) {
+      // 비공개 게임은 직접 URL을 입력해도 플레이할 수 없도록 차단합니다.
+      if (path.startsWith('/games/')) {
+        const slug = path.match(/^\/games\/([a-z][a-z0-9-]*)\//)?.[1] || path.match(/^\/games\/([a-z][a-z0-9-]*)$/)?.[1];
+        if (slug && env.DB && !(await visibleGame(env.DB,slug))) {
+          return new Response('현재 비공개 상태인 게임입니다.',{status:404,headers:{'Content-Type':'text/plain; charset=utf-8'}});
+        }
+      }
+      return env.ASSETS.fetch(request);
+    }
     try { return await api(request, env); }
     catch (e) {
       console.error('API error', e);
