@@ -36,7 +36,7 @@ npx wrangler d1 create smart-ai-game-lab
 npm run db:remote
 ```
 
-이 명령이 `migrations/0001_init.sql`을 원격 D1에 반영하여 테이블을 만듭니다. 마이그레이션이 성공했는지 확인한 다음 배포하세요.
+위 명령은 수동 DB 초기화가 필요한 경우에만 사용합니다. **GitHub 자동 배포의 `npm run deploy` 명령이 원격 마이그레이션을 먼저 적용하고 Worker를 배포하므로, 일반적인 최초 배포에서는 별도 실행하지 않아도 됩니다.**
 
 ## C. 관리자 보안 키 설정
 
@@ -53,8 +53,8 @@ npx wrangler secret put ADMIN_KEY
 1. Cloudflare 대시보드 → **Workers & Pages → Create application**으로 이동합니다.
 2. **GitHub**를 선택하고 새 저장소 `smart-ai-game-lab`을 연결합니다.
 3. Worker 이름을 설정 파일의 이름과 동일하게 **`smart-ai-game-lab`**으로 맞춥니다.
-4. Root directory = 저장소 루트, Build command = `npm install` (또는 대시보드 기본값), Deploy command = `npx wrangler deploy`를 설정합니다.
-5. `wrangler.jsonc`에 실제 D1 `database_id`가 커밋되었는지, 원격 마이그레이션이 실행되었는지 확인합니다.
+4. Root directory = 저장소 루트, Build command = 비워둠(기본값), **Deploy command = `npm run deploy`** 로 설정합니다. 이 명령은 원격 D1 마이그레이션 후 Worker를 배포합니다.
+5. `wrangler.jsonc`에 실제 D1 `database_id`가 커밋되었는지 확인합니다. `npm run deploy` 실행 과정에서 원격 마이그레이션이 수행됩니다.
 6. **Save and Deploy** 후 제공되는 `*.workers.dev` 주소로 접속합니다.
 7. GitHub `main` 브랜치로 새 커밋을 Push하면 이후 자동 배포됩니다.
 
