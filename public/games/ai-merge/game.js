@@ -1,10 +1,13 @@
-import {COLS,ROWS,MAX_TURNS,createMergeGame,dropMergeRobot,mergeScoreSummary} from './engine.js';
+import {COLS,ROWS,MAX_TURNS,createMergeGame,dropMergeRobot,mergeScoreSummary,peekNextTier,landingRow} from './engine.js';
 const $=id=>document.getElementById(id);
 const names=['','새싹봇','번개봇','꿈틀봇','스타봇','그린봇','갤럭시봇','파이어봇','아쿠아봇','레전드봇'];
 const colors=['','#73e9de','#9cb3ff','#ffb2d0','#ffd47d','#a8e9a3','#c9aaff','#ffa18d','#8fe1ff','#ffed9e'];
+const symbols=['','✦','ϟ','◎','★','❀','✧','▲','≈','♛'];
 const fmt=n=>Number(n).toLocaleString('ko-KR');
 const localKey=m=>'smart-ai-merge-high-'+m;
 let state=null,selected=2,session=null,playing=false,soundEnabled=true,mode='classic',saveBusy=false,audio=null,toastTimer=0;
+let animating=false,queuedColumn=null,fastMode=localStorage.getItem('smart-ai-merge-fast')==='true';
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 $('nickname').value=localStorage.getItem('smart-ai-merge-name')||'AI 탐험가';
 
 function sound(freq=490,duration=.08,kind='sine'){
@@ -27,25 +30,110 @@ function bot(tier,animate=false){
   const face=document.createElement('span');face.className='face';
   const mouth=document.createElement('i');mouth.className='mouth';face.append(mouth);
   const label=document.createElement('span');label.className='tier';label.textContent='Lv.'+tier;
-  b.append(face,label);return b;
+  const symbol=document.createElement('span');symbol.className='bot-symbol';symbol.textContent=symbols[tier];symbol.setAttribute('aria-hidden','true');
+  b.append(face,symbol,label);return b;
+}
+function renderGrid(grid){
+  const root=$('grid'),fragment=document.createDocumentFragment();
+  for(let row=0;row<ROWS;row++)for(let col=0;col<COLS;col++){
+    const tier=grid[row][col],cell=document.createElement('div');
+    cell.className='cell'+(tier?' filled':'')+(selected===col?' drop-focus':'');
+    cell.dataset.cell=row+':'+col;
+    if(tier)cell.append(bot(tier));
+    fragment.append(cell);
+  }
+  root.replaceChildren(fragment);
+}
+function updateGhost(){
+  const ghost=$('ghostBot');
+  const row=state&&playing&&!animating?landingRow(state.grid,selected):-1;
+  ghost.hidden=row<0;
+  if(row<0)return;
+  ghost.style.left=(selected*100/COLS)+'%';
+  ghost.style.top=(row*100/ROWS)+'%';
+  ghost.replaceChildren(bot(state.next));
 }
 function draw(){
   if(!state)return;
-  const grid=$('grid'),fragment=document.createDocumentFragment();
-  for(let row=0;row<ROWS;row++)for(let col=0;col<COLS;col++){
-    const tier=state.grid[row][col],cell=document.createElement('div');
-    cell.className='cell'+(tier?' filled':'')+(selected===col?' drop-focus':'');
-    if(tier)cell.append(bot(tier,Boolean(state.last&&state.last.chains.length)));
-    fragment.append(cell);
-  }
-  grid.replaceChildren(fragment);
+  renderGrid(state.grid);
   $('nextBot').replaceChildren(bot(state.next));
   $('nextName').textContent='Lv. '+state.next+' · '+names[state.next];
+  $('afterNext').textContent='그다음: Lv.'+peekNextTier(state)+' '+names[peekNextTier(state)];
   $('score').textContent=fmt(state.score);
   $('turns').textContent=fmt(state.moves.length)+' / '+MAX_TURNS[mode];
   $('merges').textContent=fmt(state.merges);
   $('best').textContent=fmt(Math.max(state.score,Number(localStorage.getItem(localKey(mode))||0)));
   $('laneArrow').style.transform='translateX('+(selected*100)+'%)';
+  updateGhost();
+}
+function duration(ms){return reduceMotion?0:Math.round(ms*(fastMode?.45:1));}
+function delay(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
+function screenPoint(pos){
+  return {left:pos.col*100/COLS,top:pos.row*100/ROWS};
+}
+async function fly(tier,from,to,ms,hideOriginal=false){
+  const layer=$('fxLayer');
+  if(hideOriginal){
+    const cell=$('grid').querySelector('[data-cell="'+from.row+':'+from.col+'"]');
+    if(cell)cell.classList.add('fx-hide');
+  }
+  const holder=document.createElement('div');
+  holder.className='flight-token';
+  const start=screenPoint(from);
+  holder.style.left=start.left+'%';holder.style.top=start.top+'%';
+  holder.append(bot(tier));
+  layer.append(holder);
+  try{
+    const time=duration(ms);
+    if(time){
+      const dx=(to.col-from.col)*$('board').clientWidth/COLS;
+      const dy=(to.row-from.row)*$('board').clientHeight/ROWS;
+      const falling=from.row<0;
+      const frames=falling?[
+        {offset:0,transform:'translate(0px,0px) scale(.87)',opacity:.65},
+        {offset:.75,transform:'translate('+dx+'px,'+(dy+7)+'px) scale(1.08,.9)',opacity:1},
+        {offset:.88,transform:'translate('+dx+'px,'+(dy-4)+'px) scale(.96,1.05)',opacity:1},
+        {offset:1,transform:'translate('+dx+'px,'+dy+'px) scale(1)',opacity:1}
+      ]:[
+        {transform:'translate(0px,0px) scale(.98)',opacity:1},
+        {transform:'translate('+dx+'px,'+dy+'px) scale(1.12)',opacity:.86}
+      ];
+      const animation=holder.animate(frames,{
+        duration:time,easing:falling?'cubic-bezier(.34,.02,.65,1)':'ease-in-out',fill:'forwards'
+      });
+      await animation.finished.catch(()=>{});
+    }
+  }finally{holder.remove();}
+}
+function impact(){
+  const board=$('board');board.classList.remove('impact');void board.offsetWidth;board.classList.add('impact');
+}
+function burst(frame){
+  const node=document.createElement('div');node.className='merge-burst';
+  node.style.left=((frame.to.col+.5)*100/COLS)+'%';
+  node.style.top=((frame.to.row+.5)*100/ROWS)+'%';
+  const text=document.createElement('span');text.textContent='+'+fmt(frame.points);
+  node.append(text);$('fxLayer').append(node);
+  setTimeout(()=>node.remove(),duration(420)+40);
+}
+async function playFrames(before,frames){
+  animating=true;queuedColumn=null;$('ghostBot').hidden=true;
+  renderGrid(before);
+  for(const frame of frames){
+    if(frame.type==='drop'){
+      await fly(frame.tier,frame.from,frame.to,160+(frame.row+1)*30);
+      renderGrid(frame.grid);sound(350,.07);impact();
+    }else if(frame.type==='merge'){
+      await fly(frame.oldTier,frame.from,frame.to,200,true);
+      renderGrid(frame.grid);
+      burst(frame);impact();sound(450+frame.chain*95,.12);
+      await delay(duration(115));
+    }else if(frame.type==='gravity'){
+      await Promise.all(frame.movements.map(m=>fly(m.tier,m.from,m.to,140+(m.to.row-m.from.row)*45,true)));
+      renderGrid(frame.grid);impact();sound(290,.05);
+    }
+  }
+  animating=false;
 }
 function toast(text){
   const node=$('gameToast');
@@ -56,7 +144,7 @@ function toast(text){
 function updateSelected(value){
   selected=(value+COLS)%COLS;
   $('laneArrow').style.transform='translateX('+(selected*100)+'%)';
-  if(state)draw();
+  if(state&&!animating)draw();
 }
 function koreaDay(timestamp=Date.now()){return new Date(timestamp+9*3600000).toISOString().slice(0,10);}
 async function start(){
@@ -80,29 +168,43 @@ async function start(){
   }
   $('startBtn').disabled=false;
   state=createMergeGame(seed,mode);
-  selected=2;playing=true;saveBusy=false;
+  selected=2;playing=true;saveBusy=false;animating=false;queuedColumn=null;
   $('startOverlay').hidden=true;$('endOverlay').hidden=true;
   $('modeTag').textContent=mode==='daily'?'오늘의 퍼즐 · 35번':'자유 합체 · 160번';
   $('rankMode').value=mode;
   draw();loadRankings();sound(700,.12);
 }
-function drop(column=selected){
+async function drop(column=selected){
   if(!playing||!state)return;
+  if(animating){queuedColumn=column;return;}
   selected=column;
+  const before=state.grid.map(row=>row.slice());
   const result=dropMergeRobot(state,column);
-  if(!result.ok){sound(180,.1,'sawtooth');toast('이 열은 가득 찼어요');draw();return;}
-  draw();
+  if(!result.ok){sound(180,.1,'sawtooth');toast('이 열이 가득 찼습니다!');draw();return;}
+  try{
+    await playFrames(before,result.last.frames);
+  }catch(error){
+    console.error('합체 연출 오류',error);
+  }finally{
+    $('fxLayer').replaceChildren();
+    animating=false;
+    draw();
+  }
   if(result.last.combo){
-    sound(460,.09);
-    setTimeout(()=>sound(660+Math.min(5,result.last.combo)*110,.14),70);
-    toast(result.last.combo>=2?'CHAIN ×'+result.last.combo+' · +'+fmt(result.last.gained)+'점':'합체 성공! +'+fmt(result.last.gained)+'점');
-    navigator.vibrate?.(result.last.combo>1?[25,35,25]:18);
-  }else sound(340,.055);
-  if(result.over)finish();
+    toast(result.last.combo>=2?'연쇄 진화 ×'+result.last.combo+' · +'+fmt(result.last.gained)+'점':
+      '합체 성공! +'+fmt(result.last.gained)+'점');
+    navigator.vibrate?.(result.last.combo>1?[30,40,30]:14);
+  }
+  if(result.over){queuedColumn=null;finish();return;}
+  if(queuedColumn!==null){
+    const next=queuedColumn;queuedColumn=null;
+    // 한 번의 애니메이션 동안 입력한 다음 열 하나를 예약합니다.
+    drop(next);
+  }
 }
 async function finish(){
   if(!playing||!state)return;
-  playing=false;
+  playing=false;animating=false;queuedColumn=null;
   const current=state,summary=mergeScoreSummary(current);
   const key=localKey(mode),highest=Math.max(Number(localStorage.getItem(key)||0),summary.score);
   localStorage.setItem(key,String(highest));
@@ -175,6 +277,14 @@ document.addEventListener('keydown',e=>{
 $('startBtn').addEventListener('click',start);
 $('againBtn').addEventListener('click',()=>{if(saveBusy)return;$('endOverlay').hidden=true;$('startOverlay').hidden=false;$('startMsg').textContent='';});
 $('quitBtn').addEventListener('click',()=>{if(playing&&confirm('지금까지의 점수를 저장하고 종료하시겠습니까?'))finish();});
+$('speedBtn').addEventListener('click',()=>{
+  fastMode=!fastMode;
+  localStorage.setItem('smart-ai-merge-fast',String(fastMode));
+  $('speedBtn').textContent=fastMode?'연출 빠름':'연출 보통';
+  $('speedBtn').setAttribute('aria-pressed',String(fastMode));
+});
+$('speedBtn').textContent=fastMode?'연출 빠름':'연출 보통';
+$('speedBtn').setAttribute('aria-pressed',String(fastMode));
 $('soundBtn').addEventListener('click',()=>{soundEnabled=!soundEnabled;$('soundBtn').textContent=soundEnabled?'소리 켜짐':'소리 꺼짐';});
 $('refreshRank').addEventListener('click',loadRankings);
 $('rankMode').addEventListener('change',loadRankings);

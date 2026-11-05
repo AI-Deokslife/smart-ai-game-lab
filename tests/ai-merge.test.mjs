@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {DatabaseSync} from 'node:sqlite';
 import {Script} from 'node:vm';
 import worker from '../src/index.js';
-import {COLS,ROWS,MAX_TURNS,createMergeGame,dropMergeRobot,replayMergeGame,mergeScoreSummary} from '../public/games/ai-merge/engine.js';
+import {COLS,ROWS,MAX_TURNS,createMergeGame,dropMergeRobot,replayMergeGame,mergeScoreSummary,landingRow,peekNextTier} from '../public/games/ai-merge/engine.js';
 
 const fixture=()=>{
   const sqlite=new DatabaseSync(':memory:');
@@ -127,6 +127,77 @@ test('랭킹은 게임·모드와 무관하게 항상 최대 10위까지만 반�
     assert.equal(result.data.rankings[9].rank,10);
   }
 });
+
+test('낙하→접촉 합체→중력 낙하→연쇄 합체가 단계별 프레임으로 기록된다',()=>{
+  const g=createMergeGame('visual-effects');
+  g.grid[6][0]=1;g.grid[6][1]=2;g.next=1;
+  const before=g.grid.map(row=>row.slice());
+  const result=dropMergeRobot(g,0);
+  assert.equal(result.ok,true);
+  const frames=result.last.frames;
+  assert.deepEqual(frames.map(x=>x.type),['drop','merge','gravity','merge']);
+  assert.deepEqual(frames[0].to,{row:5,col:0});
+  assert.equal(frames[0].grid[5][0],1);
+  assert.equal(frames[1].grid[5][0],2);
+  assert.equal(frames[1].grid[6][0],0);
+  assert.deepEqual(frames[2].movements,[{from:{row:5,col:0},to:{row:6,col:0},tier:2}]);
+  assert.equal(frames[2].grid[6][0],2);
+  assert.equal(frames[3].grid[6][0],3);
+  assert.equal(frames[3].grid[6][1],0);
+  assert.deepEqual(g.grid,frames.at(-1).grid);
+  assert.equal(before[5][0],0);
+  assert.equal(g.score,300);
+});
+test('다음 로봇 미리보기는 난수 상태를 바꾸지 않아 서버 재현과 항상 동일하다',()=>{
+  const a=createMergeGame('preview-determinism','classic');
+  const b=createMergeGame('preview-determinism','classic');
+  for(let i=0;i<12&&!a.over;i++){
+    assert.equal(peekNextTier(a),peekNextTier(a));
+    const col=[2,3,1,4,0][i%5];
+    assert.equal(dropMergeRobot(a,col,false).ok,true);
+    assert.equal(dropMergeRobot(b,col,false).ok,true);
+    assert.equal(a.next,b.next);
+    assert.deepEqual(mergeScoreSummary(a),mergeScoreSummary(b));
+  }
+});
+test('중력 물리 규칙: 모든 로봇은 빈칸 위에 떠 있지 않고 같은 등급 충돌만 합체한다',()=>{
+  for(let seedIndex=0;seedIndex<60;seedIndex++){
+    const game=createMergeGame('seed-'+seedIndex,'classic');
+    for(let turn=0;turn<100&&!game.over;turn++){
+      let col=-1;
+      for(let offset=0;offset<COLS;offset++){
+        const testCol=(turn+offset+seedIndex)%COLS;
+        if(landingRow(game.grid,testCol)>=0){col=testCol;break;}
+      }
+      if(col<0)break;
+      assert.equal(dropMergeRobot(game,col,false).ok,true);
+      for(let x=0;x<COLS;x++){
+        let seenEmpty=false;
+        for(let y=ROWS-1;y>=0;y--){
+          const tier=game.grid[y][x];
+          assert.ok(tier>=0&&tier<=9);
+          if(!tier)seenEmpty=true;
+          else assert.equal(seenEmpty,false,'빈 공간 위에 로봇이 공중에 떠 있으면 안 됩니다');
+        }
+      }
+    }
+    assert.deepEqual(mergeScoreSummary(replayMergeGame('seed-'+seedIndex,'classic',game.moves)),mergeScoreSummary(game));
+  }
+});
+test('게임 화면은 낙하 궤적, 합체, 중력 프레임을 실제로 재생한다',()=>{
+  const html=readFileSync(new URL('../public/games/ai-merge/index.html',import.meta.url),'utf8');
+  const js=readFileSync(new URL('../public/games/ai-merge/game.js',import.meta.url),'utf8');
+  const css=readFileSync(new URL('../public/games/ai-merge/styles.css',import.meta.url),'utf8');
+  for(const id of ['ghostBot','fxLayer','speedBtn','afterNext'])assert.match(html,new RegExp('id="'+id+'"'));
+  for(const event of ['drop','merge','gravity'])assert.match(js,new RegExp("frame.type==='"+event+"'"));
+  assert.match(js,/holder\.animate/);
+  assert.match(js,/frame\.movements/);
+  assert.match(js,/landingRow\(state\.grid,selected\)/);
+  assert.match(js,/peekNextTier\(state\)/);
+  assert.match(css,/\.merge-burst/);
+  assert.match(css,/\.flight-token/);
+});
+
 test('HTML/CSS/JS 게임 파일과 공통 점수 SDK 경로는 일치한다',()=>{
   const html=readFileSync(new URL('../public/games/ai-merge/index.html',import.meta.url),'utf8');
   const js=readFileSync(new URL('../public/games/ai-merge/game.js',import.meta.url),'utf8');
