@@ -82,6 +82,9 @@ canvas{width:100%;height:100%;display:block;image-rendering:auto}
 @media(max-width:380px){.overlay{gap:7px;padding:11px 13px}.sticker{height:58px;width:58px;font-size:34px}.overlay h2{font-size:35px}.overlay p{font-size:12px}.control{height:64px}.hud-item strong{font-size:19px}.hud-item small{font-size:9px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 
+/* 랭킹 표시 방식: 기록 전체 또는 참가자별 최고 */
+.rank-filters{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.rank-filters select{width:auto;max-width:150px;flex:1 1 105px;font-size:11px;padding:9px 7px}
 </style>
 </head>
 <body>
@@ -94,7 +97,7 @@ canvas{width:100%;height:100%;display:block;image-rendering:auto}
   <section class="card"><h2>조작 방법</h2><div class="keys"><div class="key">A / ← <small>방향 전환 + 한 칸</small></div><div class="key">D / → <small>진행 방향으로 오르기</small></div><div class="key">터치 <small>하단 두 버튼</small></div></div>
   <p class="mini">계단이 이어지면 오르기, 꺾이면 방향 전환! 두 버튼 모두 누르면 한 칸 올라갑니다. 계단을 벗어나거나 시간이 끝나면 게임 종료! 빠르게 누르면 PERFECT +25점. <b>자유 도전</b>은 생존 기록, <b>오늘의 도전</b>은 45초 동안의 기록을 경쟁합니다.</p></section>
   <section class="card"><h2>나의 기록</h2><div class="stat-grid"><div class="stat-card"><b id="localHigh">0</b><small>이 기기 최고 점수</small></div><div class="stat-card"><b id="localSteps">0</b><small>최다 계단</small></div></div></section>
-  <section class="card"><div class="rank-head"><h2>온라인 TOP 5</h2><select id="rankFilter" aria-label="랭킹 기간"><option value="all">전체 기록</option><option value="today">오늘의 기록</option></select></div><ol id="ranks"><li class="muted">랭킹을 불러오는 중...</li></ol><p id="rankInfo" class="mini">모드별 최고 점수를 집계합니다.</p></section>
+  <section class="card"><div class="rank-head"><h2>온라인 TOP 5</h2><div class="rank-filters"><select id="rankFilter" aria-label="랭킹 기간"><option value="all">전체 기록</option><option value="today">오늘의 기록</option></select><select id="rankView" aria-label="기록 보기 방식"><option value="all">모든 플레이</option><option value="best">참가자별 최고</option></select></div></div><ol id="ranks"><li class="muted">랭킹을 불러오는 중...</li></ol><p id="rankInfo" class="mini">모든 플레이 기록을 점수순으로 표시합니다. 참가자별 최고 점수로도 볼 수 있습니다.</p></section>
   <p class="mini">이 게임은 은평메디텍고등학교 스마트AI과에서 제작한 SMART AI GAME LAB 작품입니다. <a href="/">다른 게임 둘러보기</a></p>
 </aside>
 <section class="board" aria-label="AI 러시 게임">
@@ -406,7 +409,7 @@ function loop(t){
 async function loadRanks(){
   const el=$('ranks');el.replaceChildren();const waiting=document.createElement('li');waiting.textContent='기록 조회 중...';el.append(waiting);
   try{
-    const items=await SmartAILab.ranking('ai-rush',mode,$('rankFilter').value);
+    const items=await SmartAILab.ranking('ai-rush',mode,$('rankFilter').value,$('rankView').value);
     el.replaceChildren();
     if(!items.rankings.length){const li=document.createElement('li');li.textContent='아직 기록이 없습니다. 첫 주인공이 되어 보세요!';el.append(li);return;}
     for(const item of items.rankings.slice(0,5)){
@@ -421,6 +424,7 @@ $('resumeBtn').onclick=pause;$('quitBtn').onclick=()=>finish('도전 종료');
 $('pauseBtn').onclick=pause;$('backBtn').onclick=()=>location.assign('/');
 $('soundBtn').onclick=()=>{soundOn=!soundOn;$('soundBtn').textContent=soundOn?'소리 켜짐':'소리 꺼짐';};
 $('rankFilter').onchange=loadRanks;
+$('rankView').onchange=loadRanks;
 $('shareBtn').onclick=async()=>{const text='AI 러시 '+fmt(score)+'점 · '+steps+'계단! SMART AI GAME LAB '+location.href;try{if(navigator.share)await navigator.share({title:'AI 러시 기록',text});else{await navigator.clipboard.writeText(text);$('onlineMsg').textContent='기록 문구를 복사했습니다.';}}catch{}};
 for(const [id,action] of [['leftBtn','turn'],['rightBtn','climb']]){
   $(id).addEventListener('pointerdown',e=>{e.preventDefault();act(action);});
