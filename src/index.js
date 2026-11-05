@@ -1,7 +1,8 @@
 import { GAMES, MODES, liveGame, validName, validateTowerResult, validateRushResult, kstStartUtc } from './validation.js';
 import { adminAuthRoute, adminSignedIn } from './admin-auth.js';
 import { catalogRoute, listedGames, visibleGame } from './catalog.js';
-import { replayMergeGame, mergeScoreSummary, MAX_TURNS } from '../public/games/ai-merge/engine.js';
+import { replayMergeGame, mergeScoreSummary } from '../public/games/ai-merge/engine.js';
+import { replayJumpGame, jumpSummary, MAX_TICKS, FRAME_MS } from '../public/games/ai-jump/engine.js';
 
 const BASE_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
 const reply = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: BASE_HEADERS });
@@ -98,9 +99,9 @@ async function api(req, env) {
     if (session.finished_at !== null) return fail('이미 제출된 기록입니다.', 409);
     const elapsed = Date.now() - session.started_at;
     if (elapsed < 0 || elapsed > 3600000) return fail('유효 시간이 지난 게임입니다.', 410);
-    const minMsPerStep = session.game_id === 'ai-rush' ? 100 : session.game_id === 'ai-merge' ? 70 : 180;
+    const minMsPerStep = session.game_id === 'ai-rush' ? 100 : session.game_id === 'ai-merge' ? 70 : session.game_id === 'ai-jump' ? 25 : 180;
     if (elapsed < Math.max(250, (Number(data.floors) || 0) * minMsPerStep)) return fail('비정상적으로 빠른 게임 기록입니다.', 422);
-    if (!['ai-tower','ai-rush','ai-merge'].includes(session.game_id)) return fail('게임별 검증기가 준비되지 않았습니다.',501);
+    if (!['ai-tower','ai-rush','ai-merge','ai-jump'].includes(session.game_id)) return fail('게임별 검증기가 준비되지 않았습니다.',501);
     let result;
     if(session.game_id==='ai-merge'){
       const seed = session.mode==='daily' ? new Date(session.started_at+9*60*60*1000).toISOString().slice(0,10) : session.id;
@@ -109,6 +110,22 @@ async function api(req, env) {
       const expected=mergeScoreSummary(replay);
       const matches=['score','floors','perfects','combo'].every(key=>Number.isSafeInteger(data[key])&&data[key]===expected[key]);
       result=matches?{ok:true,value:expected}:{ok:false,error:'서버에서 재현한 게임 점수와 제출 기록이 다릅니다.'};
+    } else if(session.game_id==='ai-jump'){
+      // Web client sends 3-bit packed controls (LEFT/RIGHT/JUMP) for each 40ms tick.
+      // The deterministic engine reproduces physics, platform collisions, stars and score.
+      // Real session time bounds the trace to prevent faster-than-real-time submissions.
+      const ticks=data.ticks;
+      if(!Number.isSafeInteger(ticks)||ticks<1||ticks>MAX_TICKS[session.mode]||
+          elapsed+1500 < ticks*FRAME_MS)
+        return fail('AI 네온 점프의 플레이 시간 또는 입력 기록이 올바르지 않습니다.',422);
+      const seed=session.mode==='daily'?
+        new Date(session.started_at+9*60*60*1000).toISOString().slice(0,10):session.id;
+      const played=replayJumpGame(seed,session.mode,data.trace,ticks);
+      if(!played)return fail('AI 네온 점프 입력 기록을 재현할 수 없습니다.',422);
+      const expected=jumpSummary(played);
+      const matches=['score','floors','perfects','combo'].every(key=>
+        Number.isSafeInteger(data[key])&&data[key]===expected[key]);
+      result=matches?{ok:true,value:expected}:{ok:false,error:'실제 이동 경로와 제출 점수가 일치하지 않습니다.'};
     } else {
       result=session.game_id==='ai-rush'?validateRushResult(data):validateTowerResult(data);
     }
