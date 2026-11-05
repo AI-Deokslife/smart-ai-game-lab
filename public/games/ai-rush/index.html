@@ -74,7 +74,7 @@ canvas{width:100%;height:100%;display:block;image-rendering:auto}
   .board{max-width:430px}
   .side{max-width:650px;width:100%;margin:auto}
   .side>.eyebrow,.side>h1,.side>.desc{display:none}
-  .stage{width:min(100%,calc(62svh * 400 / 565));margin:auto}
+  .stage{width:min(100%,43.9svh);margin:auto}
   .hud,.control-row,.under{width:min(100%,430px);margin-left:auto;margin-right:auto}
   .control{height:67px;font-size:17px}
   .card{margin:12px 0}
@@ -131,7 +131,7 @@ const W=400,H=565;
 ctx.setTransform(2,0,0,2,0,0);
 const fmt=n=>n.toLocaleString('ko-KR'), clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 let state='idle',mode='classic',steps=0,perfects=0,combo=0,bestCombo=0,score=0;
-let stepLeft=3500,globalLeft=45000,anim=0,flash='',flashTime=0,lastTs=0,countdown=0,goal=[],session=null,soundOn=true,finishOnce=false,lastDirection=0,previousDirection=0,runClock=0,resumeState='playing';
+let stepLeft=3500,globalLeft=45000,anim=0,flash='',flashTime=0,lastTs=0,countdown=0,goal=[],session=null,soundOn=true,finishOnce=false,lastDirection=0,previousDirection=0,runClock=0,resumeState='playing',queuedDir=0;
 let lastNickname=localStorage.getItem('smartAI-rush-name')||'AI 플레이어';
 $('nickname').value=lastNickname;
 function localStats(){
@@ -184,7 +184,7 @@ function start(){
   }
   localStorage.setItem('smartAI-rush-name',nickname);
   lastNickname=nickname;mode=$('modeSelect').value;goal=sequence();steps=0;perfects=0;combo=0;bestCombo=0;score=0;
-  stepLeft=3500;globalLeft=45000;anim=0;flash='';flashTime=0;lastDirection=0;previousDirection=0;runClock=0;finishOnce=false;
+  stepLeft=3500;globalLeft=45000;anim=0;flash='';flashTime=0;lastDirection=0;previousDirection=0;runClock=0;queuedDir=0;finishOnce=false;
   $('modePill').textContent=mode==='daily'?'오늘의 도전 45초':'자유 도전';
   overlay('startOverlay',false);overlay('endOverlay',false);overlay('pauseOverlay',false);overlay('countOverlay',true);
   state='countdown';countdown=3000;hud();
@@ -194,14 +194,16 @@ function start(){
   loadRanks();beep(510,.08);
 }
 function move(dir){
-  if(state!=='playing'||anim>0)return;
+  if(state!=='playing')return;
+  // 빠르게 연속 입력하더라도 다음 동작을 한 번 예약해 입력 누락을 줄입니다.
+  if(anim>0){queuedDir=dir;return;}
   if(dir!==goal[steps]){
     flash='방향 실수!';flashTime=1.1;beep(180,.2);navigator.vibrate?.(80);finish('방향을 잘못 선택했어요');
     return;
   }
   const elapsed=stepDuration()-stepLeft;
   const perfect=elapsed<=880;
-  previousDirection=lastDirection;steps++;lastDirection=dir;anim=.23;
+  previousDirection=lastDirection;steps++;lastDirection=dir;anim=.20;
   if(perfect){perfects++;combo++;bestCombo=Math.max(combo,bestCombo);}
   else combo=0;
   score=steps*100+perfects*25;
@@ -309,7 +311,7 @@ function draw(ts){
   ctx.fillStyle='#ebfaffaa';ctx.font='900 13px system-ui';ctx.textAlign='center';
   ctx.fillText('SMART AI · STEP LAB',200,61);
   // 인접 계단들은 로봇 점프 동안 아래로 흐르며 상승하는 인상을 줍니다.
-  const p=anim>0?1-anim/.23:1;
+  const p=anim>0?1-anim/.20:1;
   for(let i=7;i>=-2;i--){
     const idx=steps+i-1,side=idx<0?0:goal[Math.min(idx,goal.length-1)]||1;
     const y=424-i*49-49*(1-p);
@@ -342,7 +344,10 @@ function loop(t){
     if(countdown<=0){state='playing';overlay('countOverlay',false);beep(830,.12);}
   }else if(state==='playing'){
     stepLeft-=dt;runClock+=dt;if(mode==='daily')globalLeft-=dt;
-    if(anim>0)anim=Math.max(0,anim-dt/1000);
+    if(anim>0){
+      anim=Math.max(0,anim-dt/1000);
+      if(anim===0 && queuedDir){const next=queuedDir;queuedDir=0;move(next);}
+    }
     if(flashTime>0)flashTime-=dt/1000;
     if(stepLeft<=0 || (mode==='daily'&&globalLeft<=0))finish(mode==='daily'&&globalLeft<=0?'45초 도전 완료!':'시간 초과!');
     hud();
