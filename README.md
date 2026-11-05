@@ -3,14 +3,15 @@
 **은평메디텍고등학교 스마트AI과** 모바일 게임 플랫폼 (1단계 MVP)
 
 - 포털: `public/index.html` (모바일/PC 반응형)
-- 첫 번째 게임: `public/games/ai-tower/index.html` (기존 AI 타워 챌린지 이식)
+- 게임 1: `public/games/ai-tower/index.html` (AI 타워 챌린지)
+- 게임 2: `public/games/ai-rush/index.html` (AI 러시, A/D·모바일 터치, 자유/일일 도전)
 - 모든 게임이 사용할 SDK: `public/shared/lab-sdk.js`
 - API: `src/index.js` (Cloudflare Workers)
-- DB: `migrations/0001_init.sql` (Cloudflare D1/SQLite)
-- 관리자: `public/admin/index.html` (통계·최근 기록·기록 삭제)
+- DB: `migrations/0001_init.sql`(기록), `0002_admin_login.sql`(관리자), `0003_game_catalog.sql`(게임 관리)
+- 관리자: `public/admin/index.html` (통계·기록 관리·게임 등록·공개 상태·순서 변경)
 - 닉네임 기반 **익명 참여** (학교/실명/연락처 수집 안 함)
 
-> 이 ZIP은 **배포 가능한 소스코드**입니다. 실제 GitHub에 게시하거나 Cloudflare D1에 접속·배포한 상태는 아닙니다. 초기 `wrangler.jsonc`의 DB ID는 예시용 값이므로 **반드시 교체**하세요.
+현재 운영 저장소: https://github.com/AI-Deokslife/smart-ai-game-lab · 서비스: https://smart-ai-game-lab.deok.workers.dev
 
 ## A. 새 GitHub에 업로드하기
 
@@ -111,13 +112,32 @@ npm test
 
 인증된 참가자는 `Authorization: Bearer <token>` 헤더로 호출합니다. 관리자 API는 로그인 후 발급되는 **HttpOnly 관리자 세션 쿠키**를 사용합니다. `X-Admin-Key` 헤더 인증은 지원하지 않습니다.
 
-## 새 게임 등록 방법
+## 게임 관리 메뉴와 새 게임 등록
 
-1. `public/games/새게임/` 폴더에 HTML·JS·이미지 등을 추가합니다.
-2. `src/validation.js` 의 `GAMES`에 카드 정보를 추가하고 `live: true`로 설정합니다.
-3. 각 게임에서 `/shared/lab-sdk.js` 로드 후 `SmartAILab.begin(gameId, mode, nickname)`으로 세션을 시작하고, 종료 시 `SmartAILab.finish(record)`로 제출합니다.
-4. `src/index.js`의 `/api/game/finish`에 **새 게임만의 서버 점수 검증 함수**를 작성합니다. 다른 게임 결과를 검증 없이 받으면 안 됩니다.
-5. 포털 `public/index.html`에 게임 카드를 추가합니다. 현재 포털 카드 배열은 첫 단계이므로 수동 카드 추가 방식입니다.
+**관리자 페이지:** https://smart-ai-game-lab.deok.workers.dev/admin/
+
+관리자 로그인 후 **게임 관리** 메뉴를 선택합니다. 기존 게임의 제목·소개·공개 여부·표시 순서를 수정할 수 있으며, 새로운 게임의 메타데이터도 등록할 수 있습니다. 비공개로 바꿔도 기존 점수 데이터는 보존되고, 직접 주소로 접근하는 게임 화면도 차단됩니다.
+
+새 게임을 게시하는 순서:
+
+1. 개발한 게임을 `public/games/새게임ID/index.html` 폴더에 업로드하고 GitHub로 배포합니다.
+2. 관리자 **게임 관리 → 새 게임 등록**에서 ID, 제목, 소개, 디자인, 순서를 입력합니다.
+3. 게임 파일이 정상적으로 배포된 것을 확인한 뒤 공개 여부를 켜고 저장합니다.
+4. `/api/games`의 DB 기반 목록과 메인 포털 카드가 자동 반영됩니다.
+5. 해당 게임에서 온라인 랭킹을 사용하려면 `src/validation.js`에서 게임을 등록하고, `src/index.js`에 **게임 전용 서버 검증 함수**를 연결해야 합니다. 이를 구현하지 않은 게임은 파일만 실행되며 랭킹 등록은 제한됩니다.
+
+AI 타워 및 AI 러시는 이미 점수 검증 API가 연결되어 있습니다. AI 러시 점수 공식은 `계단 수 × 100 + PERFECT 수 × 25`입니다. 기존 D1 `scores` 테이블에서 `game_id`로 기록을 분리하므로 DB를 추가로 만들 필요가 없습니다.
+
+| URL/관리 메뉴 | 설명 |
+|---|---|
+| `GET /api/games` | 공개 게임 목록(등록·변경 즉시 반영) |
+| `GET /api/admin/games` | 관리자 전체 게임 목록 |
+| `POST /api/admin/games` | 새 게임 메타데이터 등록 |
+| `PATCH /api/admin/games/:id` | 제목·설명·공개 여부·정렬 변경 |
+| `/games/ai-rush/` | AI 러시 실행 |
+| `/games/ai-tower/` | AI 타워 실행 |
+
+게임 관리 API는 관리자 로그인 세션이 필요하며 변경 요청은 동일 출처 보호 헤더로 검증합니다. 파일 자체를 웹 관리자 화면에서 업로드하는 기능은 이 버전에 포함되지 않습니다.
 
 ## 운영 및 보안 주의사항
 
@@ -131,6 +151,7 @@ npm test
 
 ## 다음 단계
 
+- 게임 관리 메뉴에서 대표 이미지 및 미리보기 편집
 - 학교별 이벤트/QR코드/실시간 전광판
 - 관리자 이벤트 생성 및 기간별 통계, 닉네임 관리, 레이트 리밋 강화
 - AI 러시, AI 몬스터 합체 추가

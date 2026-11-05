@@ -1,6 +1,6 @@
 export const GAMES = [
   { id: 'ai-tower', title: 'AI 타워 챌린지', subtitle: '블록을 쌓아 최고 기록에 도전', path: '/games/ai-tower/', live: true },
-  { id: 'ai-rush', title: 'AI 러시', subtitle: '순발력을 시험하는 계단 달리기', path: null, live: false },
+  { id: 'ai-rush', title: 'AI 러시', subtitle: 'A·D 또는 좌우 터치로 네온 계단을 달려라', path: '/games/ai-rush/', live: true },
   { id: 'ai-merge', title: 'AI 몬스터 합체', subtitle: '로봇을 합쳐 진화시키는 퍼즐', path: null, live: false },
 ];
 export const MODES = ['classic', 'daily'];
@@ -37,4 +37,20 @@ export function kstToday(now = Date.now()) {
 }
 export function kstStartUtc(now = Date.now()) {
   return new Date(kstToday(now) + 'T00:00:00+09:00').toISOString();
+}
+
+
+// AI 러시: 한 칸 100점, PERFECT 입력마다 보너스 25점.
+export function rushScore(steps, perfects) { return steps * 100 + perfects * 25; }
+export function validateRushResult(data) {
+  if (!data || typeof data !== 'object') return { ok:false, error:'AI 러시 기록 형식이 올바르지 않습니다.' };
+  const floors = integer(data.floors, 0, 500);
+  const perfects = integer(data.perfects, 0, 500);
+  const combo = integer(data.combo, 0, 500);
+  const score = integer(data.score, 0, 10000000);
+  if ([floors,perfects,combo,score].some(x=>x===null) ||
+      perfects>floors || combo>perfects || score!==rushScore(floors,perfects)) {
+    return { ok:false, error:'AI 러시 점수 검증에 실패했습니다.' };
+  }
+  return { ok:true, value:{score,floors,perfects,combo} };
 }
