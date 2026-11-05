@@ -277,30 +277,61 @@ function cloud(x,y,scale){
   }
   ctx.restore();
 }
-function robot(x,y,angle){
-  ctx.save();ctx.translate(x,y);ctx.rotate(angle);
-  ctx.fillStyle='#24437d44';ctx.beginPath();ctx.ellipse(0,8,30,8,0,0,Math.PI*2);ctx.fill();
-  // shoes and flexible legs
-  ctx.fillStyle='#31588e';ctx.strokeStyle='#213b70';ctx.lineWidth=3;
-  ctx.fillRect(-20,-14,17,15);ctx.strokeRect(-20,-14,17,15);
-  ctx.fillRect(4,-14,17,15);ctx.strokeRect(4,-14,17,15);
-  ctx.fillStyle='#f7b378';ctx.fillRect(-24,-5,22,8);ctx.fillRect(4,-5,22,8);
-  // arms
-  ctx.fillStyle='#57b5d9';ctx.fillRect(-33,-47,11,28);ctx.fillRect(22,-47,11,28);
-  ctx.fillStyle='#eafaff';ctx.strokeStyle='#31648d';ctx.lineWidth=3;
-  ctx.beginPath();ctx.roundRect(-24,-51,48,39,10);ctx.fill();ctx.stroke();
-  ctx.fillStyle='#89ead8';ctx.beginPath();ctx.roundRect(-15,-44,30,21,6);ctx.fill();
-  ctx.fillStyle='#31598e';ctx.font='1000 13px system-ui';ctx.textAlign='center';ctx.fillText('AI',0,-29);
-  // face
-  ctx.fillStyle='#ecfbff';ctx.beginPath();ctx.roundRect(-34,-99,68,54,15);ctx.fill();
-  ctx.strokeStyle='#365c91';ctx.lineWidth=4;ctx.stroke();
-  ctx.fillStyle='#355a94';ctx.beginPath();ctx.roundRect(-26,-90,52,35,11);ctx.fill();
-  ctx.fillStyle='#91f5de';ctx.fillRect(-17,-78,11,8);ctx.fillRect(7,-78,11,8);
-  ctx.strokeStyle='#a4ffe8';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-69,7,0,Math.PI);ctx.stroke();
-  ctx.strokeStyle='#355b90';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,-99);ctx.lineTo(0,-110);ctx.stroke();
-  ctx.fillStyle='#ffcb64';ctx.beginPath();ctx.arc(0,-113,6,0,Math.PI*2);ctx.fill();
-  // cute robot cheeks
-  ctx.fillStyle='#ffabc5';ctx.fillRect(-27,-68,7,5);ctx.fillRect(20,-68,7,5);
+// 진행 방향을 분명히 읽을 수 있도록 정면 얼굴 대신 옆모습을 그립니다.
+// 좌/우는 같은 측면 로봇을 거울처럼 반전하지만, 눈과 얼굴의 돌출 부분은 확실히 한쪽에만 있습니다.
+function robot(x,y,angle,facing=1){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(angle);
+  ctx.scale(facing<0?-1:1,1);
+
+  // 바닥 그림자와 다리: 진행 방향에 맞춰 한 발이 앞으로 나옵니다.
+  ctx.fillStyle='#24437d44';
+  ctx.beginPath();ctx.ellipse(0,8,29,7,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#294773';ctx.lineWidth=3;
+  ctx.fillStyle='#4671a7';
+  ctx.beginPath();ctx.roundRect(-17,-21,14,19,4);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.roundRect(6,-20,15,20,4);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#f5ba73';
+  ctx.beginPath();ctx.roundRect(-21,-5,22,10,4);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.roundRect(8,-5,25,10,4);ctx.fill();ctx.stroke();
+
+  // 뒤쪽 팔
+  ctx.fillStyle='#4ca9cc';
+  ctx.beginPath();ctx.roundRect(-28,-53,13,34,6);ctx.fill();ctx.stroke();
+
+  // 옆을 보고 있는 몸체와 가슴의 AI 배지
+  ctx.fillStyle='#e9faff';
+  ctx.beginPath();ctx.roundRect(-23,-57,47,42,11);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#80dfce';
+  ctx.beginPath();ctx.roundRect(-7,-48,27,25,7);ctx.fill();
+  ctx.fillStyle='#31598e';ctx.font='900 12px system-ui';ctx.textAlign='center';
+  ctx.fillText('AI',7,-30);
+
+  // 머리의 뒤쪽은 둥글고, 앞쪽은 얼굴이 튀어나온 옆모습
+  ctx.fillStyle='#edfaff';ctx.strokeStyle='#365c91';ctx.lineWidth=4;
+  ctx.beginPath();ctx.roundRect(-28,-106,57,59,13);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#ecfbff';
+  ctx.beginPath();ctx.roundRect(18,-88,21,24,6);ctx.fill();ctx.stroke();
+  // 검은 바이저와 진행 방향을 바라보는 눈 하나
+  ctx.fillStyle='#355a94';
+  ctx.beginPath();ctx.roundRect(-12,-98,39,36,9);ctx.fill();
+  ctx.fillStyle='#a0ffe7';
+  ctx.beginPath();ctx.roundRect(10,-87,11,14,4);ctx.fill();
+  ctx.fillStyle='#f89fb1';
+  ctx.beginPath();ctx.roundRect(20,-69,9,5,3);ctx.fill();
+  // 앞으로 돌출된 주둥이의 작은 표시
+  ctx.fillStyle='#56779e';ctx.fillRect(32,-77,5,4);
+
+  // 머리 장식도 시선 방향으로 기울임
+  ctx.strokeStyle='#355b90';ctx.lineWidth=4;
+  ctx.beginPath();ctx.moveTo(-2,-106);ctx.lineTo(6,-119);ctx.stroke();
+  ctx.fillStyle='#ffcb64';ctx.beginPath();ctx.arc(8,-121,6,0,Math.PI*2);ctx.fill();
+
+  // 앞쪽 팔을 마지막에 그려 걸어 올라가는 옆모습 강조
+  ctx.fillStyle='#68c2df';ctx.strokeStyle='#294773';ctx.lineWidth=3;
+  ctx.beginPath();ctx.roundRect(21,-51,13,31,6);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#e9faff';ctx.beginPath();ctx.arc(28,-22,7,0,Math.PI*2);ctx.fill();ctx.stroke();
   ctx.restore();
 }
 function draw(ts){
@@ -337,7 +368,7 @@ function draw(ts){
   const worldStep=isMoving?previous+p:steps;
   const playerX=200+worldX-cameraX;
   const playerY=440-(worldStep-cameraStep)*43-(isMoving?34*Math.sin(Math.PI*p):Math.sin(ts/400)*2);
-  robot(playerX,playerY,isMoving?Math.sin(Math.PI*p)*.08*heading:0);
+  robot(playerX,playerY,isMoving?Math.sin(Math.PI*p)*.08*heading:0,heading);
   const turn=goal[Math.min(steps,goal.length-1)]!==heading;
   ctx.fillStyle='#284c82';ctx.font='1000 22px system-ui';ctx.textAlign='center';
   ctx.fillText(turn?'다음 : 방향 전환 ↶':'다음 : 오르기 ↗',200,149);
