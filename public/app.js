@@ -34,7 +34,11 @@ function drawCard(g,index){
   } else if(g.visual==='jump'){
     const platforms=el('div','jump-platforms');
     for(let i=0;i<5;i++)platforms.append(el('i'));
-    art.append(platforms,el('span','jump-runner','✦'),el('span','jump-star','★'));
+    const city=el('div','jump-city');
+    for(let i=0;i<9;i++)city.append(el('i'));
+    const runner=el('span','jump-runner');
+    runner.append(el('i','jump-head'),el('i','jump-body'));
+    art.append(city,platforms,runner,el('span','jump-star','★'));
   } else art.append(el('div','visual-mark',g.visual==='puzzle'?'◈':'✦'));
   const meta=el('div','game-meta');
   meta.append(el('span','game-number','GAME '+String(index+1).padStart(2,'0')),el('h3','',g.title),el('p','',g.subtitle));
@@ -92,7 +96,7 @@ async function loadRanking(){
     for(const item of data.rankings){
       const li=el('li',''),rank=el('span','rank-number',item.rank),name=el('span','rank-name',item.nickname);
       const score=el('span','rank-score',fmt(item.score)+'점');
-      const unit=game==='ai-rush'?'계단':game==='ai-merge'?'번 놓음':'층';
+      const unit=game==='ai-rush'?'계단':game==='ai-merge'?'번 놓음':game==='ai-jump'?'m':'층';
       const steps=el('small','',item.floors+unit);
       score.append(steps);li.append(rank,name,score);list.append(li);
     }
