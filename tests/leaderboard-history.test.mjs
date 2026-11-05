@@ -8,7 +8,7 @@ import worker from '../src/index.js';
 const migration=n=>readFileSync(new URL('../migrations/'+n,import.meta.url),'utf8');
 function fixture(){
   const sqlite=new DatabaseSync(':memory:');
-  for(const name of ['0001_init.sql','0002_admin_login.sql','0003_game_catalog.sql','0004_score_nickname_snapshot.sql','0005_publish_ai_merge.sql'])sqlite.exec(migration(name));
+  for(const name of ['0001_init.sql','0002_admin_login.sql','0003_game_catalog.sql','0004_score_nickname_snapshot.sql','0005_publish_ai_merge.sql','0006_publish_ai_jump.sql'])sqlite.exec(migration(name));
   return {sqlite,env:{DB:{prepare(sql){let args=[];return {bind(...values){args=values;return this;},async first(){return sqlite.prepare(sql).get(...args)||null;},async all(){return {results:sqlite.prepare(sql).all(...args)};},async run(){const r=sqlite.prepare(sql).run(...args);return {meta:{changes:r.changes}};}};}}}};
 }
 async function send(env,path,{method='GET',body,token}={}){
