@@ -2,64 +2,95 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#090e25"><meta name="description" content="AI 러시 - 네온 계단을 달리며 기록에 도전하세요. 스마트AI과 모바일 게임">
+<meta name="theme-color" content="#bdf4f0"><meta name="description" content="AI 러시 - 알록달록 계단을 따라 올라가는 캐주얼 게임. 스마트AI과 모바일 게임">
 <title>AI 러시 | SMART AI GAME LAB</title>
 <style>
-:root{color-scheme:dark;font-family:system-ui,'Malgun Gothic',sans-serif;color:#f4f7ff;background:#080f25}
-*{box-sizing:border-box}body{margin:0;min-width:300px;background:radial-gradient(ellipse at 30% -8%,#183665 0,transparent 55%),radial-gradient(ellipse at 95% 85%,#332053 0,transparent 60%),#090e24}
-button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.35;cursor:default}
-a{color:#9aebff;text-decoration:none}header{max-width:1200px;margin:auto;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand{font-weight:850;font-size:14px;letter-spacing:.02em}.chip{font-size:11px;border:1px solid #6272ab85;border-radius:99px;padding:8px 12px;color:#bac9ef}
-.layout{max-width:1180px;margin:auto;padding:4px 22px 45px;display:grid;grid-template-columns:minmax(330px,455px) minmax(310px,1fr);gap:32px;align-items:start}
-.eyebrow{font-size:12px;letter-spacing:.18em;color:#89f0ed;font-weight:800}
-h1{font-size:clamp(40px,5vw,67px);line-height:1.1;letter-spacing:-.06em;margin:13px 0 12px}
-h1 span{color:#81e2e8}.desc{line-height:1.8;color:#bac8e5;font-size:15px;margin:0 0 25px}
-.card{border:1px solid #36466d;background:#151f3a;border-radius:20px;padding:22px;margin:18px 0}
-.card h2{font-size:18px;margin:0 0 12px}
-.keys{display:flex;gap:10px;flex-wrap:wrap}.key{border:1px solid #526998;border-radius:12px;background:#232f52;padding:12px 17px;font-weight:800;font-size:15px}.key small{display:block;font-size:11px;font-weight:400;color:#acbedf}
-.mini{font-size:12px;color:#acbddd;line-height:1.7}.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.stat-card{background:#233155;border-radius:14px;padding:14px}
-.stat-card b{font-size:23px;display:block}.stat-card small{color:#abbcd8}
-.rank-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
-select,input{width:100%;background:#222f52;color:white;border:1px solid #55668b;border-radius:12px;padding:12px;outline-offset:3px}
-.rank-head select{width:135px;font-size:12px;padding:8px}
-#ranks{padding:0;margin:13px 0 0;list-style:none}
-#ranks li{padding:10px 4px;border-bottom:1px solid #3c496b;display:grid;grid-template-columns:30px 1fr auto;gap:8px;font-size:13px;align-items:center}
-#ranks li small{color:#96b5e0}.muted{color:#9caccb}
-.board{min-width:0;display:flex;flex-direction:column;align-items:stretch;max-width:455px;width:100%;margin:auto}
-.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px}
-.hud-item{display:flex;flex-direction:column}.hud-item strong{font-size:26px;letter-spacing:-.03em}.hud-item small{font-size:11px;color:#9eb5db}
-.stage{position:relative;width:100%;aspect-ratio:400/565;border:1px solid #4962ad;overflow:hidden;border-radius:24px;background:#0b1941;box-shadow:0 18px 55px #04081699}
-canvas{display:block;width:100%;height:100%}.timerline{position:absolute;top:0;left:0;height:6px;width:100%;background:#7cf8ee;box-shadow:0 0 17px #39ffe7;transform-origin:left}
-.stage-info{position:absolute;left:15px;right:15px;top:16px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
-.pill{background:#07152ec4;border:1px solid #788bc078;border-radius:99px;padding:7px 11px;font-size:12px;font-weight:800}
-.overlay{position:absolute;inset:0;background:linear-gradient(#071129e8,#101c48ec);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;text-align:center;padding:23px;z-index:3}
-.overlay[hidden]{display:none}.overlay h2{margin:0;font-size:clamp(29px,8vw,42px);line-height:1.12;letter-spacing:-.04em}
-.overlay p{max-width:300px;color:#bfd0eb;margin:0;line-height:1.7;font-size:13px}
-.overlay input{max-width:280px}.overlay select{max-width:280px}
-.button{border:0;background:linear-gradient(130deg,#89ffdf,#76c8fc);color:#071a3b;border-radius:14px;font-weight:900;padding:15px 22px;min-width:190px}
-.ghost{background:#25375e;color:#e9f6ff;border:1px solid #6379a7}.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.overlay .button{max-width:290px;width:100%}
-.control-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:13px 0 9px}
-.control{height:80px;border-radius:20px;border:2px solid #567bbb;background:linear-gradient(155deg,#20366d,#182852);color:#e9f6ff;font-weight:900;font-size:19px;box-shadow:0 6px #080e23;touch-action:none;user-select:none;-webkit-user-select:none}
-.control:last-child{border-color:#5ba8b2;background:linear-gradient(155deg,#15555e,#193657)}
-.control:active{transform:translateY(3px);box-shadow:0 3px #080e23}
-.under{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.small{border:1px solid #47608a;background:#1c2c50;color:#bddaf1;padding:8px 12px;border-radius:10px;font-size:12px}
-#resultScore{font-weight:900;font-size:45px;color:#8affeb}
-#resultMeta{font-size:13px;color:#bdd0e8}
-#onlineMsg{color:#a2ecde;font-size:12px}
-.screen-count{font-size:95px!important;color:#95fff0;text-shadow:0 0 45px #8effeaaa}
-@media(max-width:850px){header{padding:14px 15px}.layout{display:flex;flex-direction:column-reverse;align-items:stretch;gap:15px;padding:0 12px 30px}.board{max-width:430px}.side{max-width:650px;width:100%;margin:auto}h1{font-size:35px}.stage{aspect-ratio:400/530}.control{height:71px}.card{margin:13px 0}.side>.eyebrow,.side>h1,.side>.desc{display:none}}
-@media(max-width:360px){.stage{aspect-ratio:400/495}.control{height:64px}.overlay{padding:13px;gap:10px}.overlay h2{font-size:28px}.hud-item strong{font-size:23px}}
+
+:root{font-family:system-ui,'Malgun Gothic',sans-serif;color:#233451;background:#eaf8fa;--ink:#233451;--sky:#92e1ed;--blue:#5377d6;--mint:#66ddc8;--sun:#ffe392}
+*{box-sizing:border-box}
+body{margin:0;min-width:300px;min-height:100svh;background:radial-gradient(circle at 91% 9%,#fff9df 0,transparent 27%),linear-gradient(140deg,#bdf4f0,#e8f4ff 49%,#e7e2ff);color:var(--ink)}
+a{color:#2267a8;text-decoration:none;font-weight:750}
+button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #ffb334;outline-offset:3px}
+button:disabled{opacity:.4;cursor:default}
+header{max-width:1120px;margin:0 auto;padding:15px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{font-size:14px;font-weight:950;letter-spacing:.02em;color:#2c4c82}
+.chip{font-size:11px;border:2px solid #d3e6ec;background:#ffffffb5;color:#3b5d84;border-radius:99px;padding:8px 12px;font-weight:850}
+.layout{max-width:1120px;margin:auto;display:grid;grid-template-columns:minmax(300px,395px) minmax(330px,440px);gap:38px;align-items:start;justify-content:center;padding:4px 20px 60px}
+.eyebrow{color:#5c60ad;font-size:12px;letter-spacing:.16em;font-weight:950}
+h1{font-size:clamp(45px,5.7vw,69px);letter-spacing:-.07em;line-height:1.05;margin:15px 0}
+h1 span{color:#3aaec9}
+.desc{font-size:15px;color:#516682;line-height:1.85;margin:0 0 25px}
+.card{background:#fffefaee;border:3px solid #dbe5f5;border-bottom:6px solid #d0d9e9;box-shadow:0 6px 0 #b2c8de40;border-radius:23px;padding:20px;margin:17px 0}
+.card h2{font-size:18px;margin:0 0 14px;color:#283f6b;letter-spacing:-.025em}
+.keys{display:flex;gap:10px;flex-wrap:wrap}
+.key{background:#e8f3ff;border:2px solid #b8c9eb;border-bottom-width:5px;color:#334977;font-size:14px;font-weight:900;padding:11px 13px;border-radius:14px}
+.key small{font-size:10px;display:block;margin-top:2px;color:#657a9a;font-weight:750}
+.mini{font-size:12px;color:#5e728e;line-height:1.7}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-card{background:#eff7ff;border-radius:15px;padding:14px}
+.stat-card b{font-size:25px;display:block;color:#304b92}.stat-card small{color:#657891;font-size:11px}
+.rank-head{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.rank-head h2{margin:0}.rank-head select{font-size:12px;width:118px;padding:9px}
+input,select{width:100%;border:2px solid #b5cce3;background:#fafdff;color:#243b64;padding:13px;border-radius:13px;font-weight:700}
+#ranks{list-style:none;margin:13px 0 0;padding:0}
+#ranks li{display:grid;grid-template-columns:24px 1fr auto;gap:8px;align-items:center;border-bottom:1px dashed #d5e0eb;padding:11px 3px;font-size:13px}
+.muted{color:#7f8fac}
+.board{max-width:430px;min-width:0;width:100%;margin:auto}
+.hud{display:grid;grid-template-columns:1.25fr 1fr 1fr 1fr;gap:6px;margin-bottom:9px}
+.hud-item{min-width:0;background:#fffefa;border:2px solid #b6d5e6;border-bottom:5px solid #9ac1da;border-radius:14px;padding:8px 6px;text-align:center}
+.hud-item strong{display:block;font-size:clamp(18px,3vw,27px);line-height:1.15;color:#304985;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.hud-item:first-child strong{color:#e36f66}.hud-item small{font-size:10px;font-weight:900;color:#7484a4;letter-spacing:.05em}
+.stage{width:100%;aspect-ratio:400 / 565;position:relative;overflow:hidden;border:5px solid #2d497d;border-bottom-width:8px;border-radius:24px;background:#98e9f2;box-shadow:0 11px 0 #9bb8d1,0 20px 35px #6390b551}
+canvas{width:100%;height:100%;display:block;image-rendering:auto}
+.timerline{position:absolute;left:0;top:0;height:8px;background:linear-gradient(90deg,#ffd563,#ff9a80);width:100%;transform-origin:left;box-shadow:0 2px 0 #e17c6688;z-index:2}
+.stage-info{position:absolute;top:17px;left:12px;right:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;pointer-events:none;z-index:1}
+.pill{border:2px solid #315890;background:#fffef4ec;color:#334d7a;font-weight:950;font-size:11px;border-radius:999px;padding:7px 10px;box-shadow:0 3px 0 #32558c33}
+.overlay{position:absolute;inset:0;padding:16px 20px;background:linear-gradient(160deg,#2a4b91f2 0%,#345ca5ef 50%,#1d346de8);color:white;z-index:3;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;text-align:center;overflow-y:auto}
+.overlay[hidden]{display:none}
+.overlay h2{font-size:clamp(34px,7vw,52px);line-height:1.12;letter-spacing:-.06em;margin:0;color:#fff9d8;text-shadow:0 5px 0 #203a7f}
+.overlay p{margin:0;max-width:330px;font-size:13px;line-height:1.65;color:#eff9ff}
+.overlay .eyebrow{color:#b7fff5}
+.overlay label.mini{color:#e2eeff;font-weight:850}
+.overlay input,.overlay select{width:100%;max-width:280px;background:#fff;color:#233960;border:3px solid #a4d6ef;padding:11px;font-weight:800}
+.overlay .button{width:100%;max-width:280px}
+.sticker{width:75px;height:75px;display:grid;place-items:center;border:5px solid #ffe6a3;border-radius:23px;background:#89ebdd;box-shadow:0 7px 0 #2a4784;transform:rotate(-7deg);font-size:45px;margin-bottom:7px}
+.button{background:#ffe177;color:#253a65;border:0;border-bottom:5px solid #eab54b;padding:13px 18px;border-radius:14px;font-size:15px;font-weight:950;min-width:135px;box-shadow:0 3px 0 #13275a42}
+.button:active{transform:translateY(3px);box-shadow:none;border-bottom-width:2px}
+.ghost{background:#f4faff;color:#294a81;border-bottom-color:#bac7e5}
+.actions{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
+.overlay .actions .button{min-width:123px;width:auto}
+.control-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 10px}
+.control{height:77px;border-radius:20px;background:#ffdd77;border:3px solid #d6a953;border-bottom:8px solid #d19747;color:#624a2d;font-weight:1000;font-size:19px;touch-action:none;-webkit-user-select:none;user-select:none;box-shadow:0 7px 0 #b19b7b30}
+.control:last-child{background:#80e5d5;border-color:#3cbbb9;border-bottom-color:#299eac;color:#20576b}
+.control:active{transform:translateY(5px);border-bottom-width:3px;box-shadow:none}
+.under{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.small{background:#fffefaf0;border:2px solid #a8c6df;border-radius:11px;padding:9px;color:#35517c;font-weight:850;font-size:12px}
+#resultScore{color:#ffe586;font-size:clamp(36px,9vw,54px);font-weight:1000;text-shadow:0 4px 0 #19376d}
+#resultMeta{font-weight:800;color:#e9fcff}
+#onlineMsg{color:#a4ffe3}
+.screen-count{font-size:115px!important}
+@media(max-width:850px){
+  header{padding:10px 13px}.layout{display:flex;flex-direction:column-reverse;align-items:stretch;padding:0 10px 30px;gap:18px}
+  .board{max-width:430px}
+  .side{max-width:650px;width:100%;margin:auto}
+  .side>.eyebrow,.side>h1,.side>.desc{display:none}
+  .stage{width:min(100%,calc(62svh * 400 / 565));margin:auto}
+  .hud,.control-row,.under{width:min(100%,430px);margin-left:auto;margin-right:auto}
+  .control{height:67px;font-size:17px}
+  .card{margin:12px 0}
+}
+@media(max-width:380px){.overlay{gap:7px;padding:11px 13px}.sticker{height:58px;width:58px;font-size:34px}.overlay h2{font-size:35px}.overlay p{font-size:12px}.control{height:64px}.hud-item strong{font-size:19px}.hud-item small{font-size:9px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
 </style>
 </head>
 <body>
 <header><a href="/" class="brand">← SMART AI GAME LAB</a><div class="chip">GAME 02 · 스마트AI과 제작</div></header>
 <main class="layout">
 <aside class="side">
-  <span class="eyebrow">NEON STEP CHALLENGE</span>
+  <span class="eyebrow">COLORFUL STEP CHALLENGE</span>
   <h1>AI <span>러시</span></h1>
-  <p class="desc">순간의 판단이 기록을 바꿉니다. 밝게 빛나는 다음 계단의 방향을 보고 빠르게 선택하세요. 한 손으로 즐기는 초간단 반응속도 게임!</p>
+  <p class="desc">다음 계단을 보고 빠르게 방향을 선택하세요. 귀여운 AI 탐험가와 함께 끝없이 높이 올라가는 순발력 게임!</p>
   <section class="card"><h2>조작 방법</h2><div class="keys"><div class="key">A / ← <small>왼쪽 계단</small></div><div class="key">D / → <small>오른쪽 계단</small></div><div class="key">터치 <small>모바일 좌우 버튼</small></div></div>
   <p class="mini">잘못된 방향을 누르거나 제한 시간이 끝나면 게임 종료! 빠르게 선택하면 PERFECT +25점. <b>자유 도전</b>은 생존 기록, <b>오늘의 도전</b>은 45초 동안의 기록을 경쟁합니다.</p></section>
   <section class="card"><h2>나의 기록</h2><div class="stat-grid"><div class="stat-card"><b id="localHigh">0</b><small>이 기기 최고 점수</small></div><div class="stat-card"><b id="localSteps">0</b><small>최다 계단</small></div></div></section>
@@ -71,24 +102,24 @@ canvas{display:block;width:100%;height:100%}.timerline{position:absolute;top:0;l
   <div class="stage">
     <canvas id="scene" width="800" height="1130" role="img" aria-label="다음 발판의 좌우 위치를 보고 방향을 선택합니다."></canvas>
     <div id="timerBar" class="timerline"></div>
-    <div class="stage-info"><span class="pill" id="modePill">자유 도전</span><span class="pill" id="comboPill">COMBO 0</span></div>
+    <div class="stage-info"><span class="pill" id="modePill">∞ 자유 도전</span><span class="pill" id="comboPill">COMBO 0</span></div>
     <div id="startOverlay" class="overlay">
-      <span class="eyebrow">READY TO RUN?</span><h2>AI RUSH</h2><p>다음 계단이 왼쪽이면 A, 오른쪽이면 D!<br>스마트폰에서는 아래 버튼을 누르세요.</p>
+      <div class="sticker" aria-hidden="true">🤖</div><span class="eyebrow">READY TO CLIMB?</span><h2>AI 러시!</h2><p>왼쪽 계단은 A, 오른쪽 계단은 D!<br>스마트폰에서는 아래 버튼을 누르세요.</p>
       <label class="mini" for="nickname">닉네임 (2~12자)</label><input id="nickname" maxlength="12" value="AI 플레이어" autocomplete="nickname">
       <label class="mini" for="modeSelect">게임 모드</label><select id="modeSelect"><option value="classic">자유 도전 · 시간 제한</option><option value="daily">오늘의 도전 · 45초</option></select>
-      <button id="startBtn" type="button" class="button">게임 시작</button><p id="startMsg" role="status"></p>
+      <button id="startBtn" type="button" class="button">도전 시작!</button><p id="startMsg" role="status"></p>
     </div>
     <div id="countOverlay" class="overlay" hidden><h2 id="countNumber" class="screen-count">3</h2><p>화면을 보고 방향을 선택하세요!</p></div>
     <div id="pauseOverlay" class="overlay" hidden><h2>일시정지</h2><p>준비되면 계속 플레이하세요.</p><button class="button" id="resumeBtn">계속하기</button><button class="button ghost" id="quitBtn">게임 종료</button></div>
     <div id="endOverlay" class="overlay" hidden>
-      <span class="eyebrow" id="endLabel">RUN COMPLETE</span><h2>도전 결과</h2><div id="resultScore">0점</div>
+      <span class="eyebrow" id="endLabel">RUN COMPLETE</span><h2>게임 끝!</h2><div id="resultScore">0점</div>
       <p id="resultMeta"></p><p id="onlineMsg" role="status">온라인 기록을 저장하고 있습니다...</p>
       <div class="actions"><button class="button" id="againBtn">다시 도전</button><button class="button ghost" id="shareBtn">기록 공유</button></div>
       <button class="small" id="backBtn" type="button">메인으로</button>
     </div>
   </div>
-  <div class="control-row"><button class="control" id="leftBtn" aria-label="왼쪽 계단 A">← A · 왼쪽</button><button class="control" id="rightBtn" aria-label="오른쪽 계단 D">오른쪽 · D →</button></div>
-  <div class="under"><span class="mini">왼쪽 A / 오른쪽 D · 스페이스 일시정지</span><div><button class="small" id="soundBtn" type="button">소리 켜짐</button> <button class="small" id="pauseBtn" type="button">일시정지</button></div></div>
+  <div class="control-row"><button class="control" id="leftBtn" aria-label="왼쪽 계단 A">← 왼쪽 A</button><button class="control" id="rightBtn" aria-label="오른쪽 계단 D">D 오른쪽 →</button></div>
+  <div class="under"><span class="mini">A·D로 방향 선택 · 스페이스 일시정지</span><div><button class="small" id="soundBtn" type="button">소리 켜짐</button> <button class="small" id="pauseBtn" type="button">일시정지</button></div></div>
 </section>
 </main>
 <script src="/shared/lab-sdk.js"></script>
