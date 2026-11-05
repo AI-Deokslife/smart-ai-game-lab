@@ -25,7 +25,7 @@
   async function call(path,options={}){
     const headers={...(options.body?{'Content-Type':'application/json'}:{}),...(options.headers||{})};
     const token=readToken();
-    if(token&&!headers.Authorization)headers.Authorization='Bearer '+token;
+    if(token&&!Object.prototype.hasOwnProperty.call(headers,'Authorization'))headers.Authorization='Bearer '+token;
     const response=await fetch(path,{...options,headers,cache:'no-store'});
     let data;
     try{data=await response.json();}catch{throw new Error('서버 응답을 읽지 못했습니다.');}
