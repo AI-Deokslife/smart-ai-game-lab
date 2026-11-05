@@ -38,15 +38,32 @@ npm run db:remote
 
 위 명령은 수동 DB 초기화가 필요한 경우에만 사용합니다. **GitHub 자동 배포의 `npm run deploy` 명령이 원격 마이그레이션을 먼저 적용하고 Worker를 배포하므로, 일반적인 최초 배포에서는 별도 실행하지 않아도 됩니다.**
 
-## C. 관리자 보안 키 설정
+## C. 관리자 로그인 설정 (최초 1회)
 
-실제 32바이트 이상의 무작위 키를 만들어 입력합니다. 아래 명령을 실행하면 안전하게 비밀값을 등록할 수 있습니다.
+Cloudflare Workers의 **변수 및 비밀값(Secrets)**에 `ADMIN_KEY`를 등록합니다. 기존에 설정한 키가 있다면 그대로 둘 수 있습니다. 신규 설치에서는 충분히 긴 무작위 Secret을 권장합니다.
 
-```bash
-npx wrangler secret put ADMIN_KEY
+**배포 후 관리자 페이지** `/admin/`에 접속하면 처음 한 번 다음을 입력합니다.
+
+1. Cloudflare에 설정된 기존 `ADMIN_KEY` (최초 등록 확인용)
+2. 앞으로 로그인에 사용할 비밀번호 **영문·숫자 포함 8~64자**
+3. 새 비밀번호 확인
+
+최초 설정 후에는 **Cloudflare ADMIN_KEY를 매번 입력하지 않고**, 새 비밀번호로 로그인합니다. 관리자 화면의 **비밀번호 변경** 버튼으로 언제든 변경할 수 있습니다.
+
+- 비밀번호는 D1에 **salt + PBKDF2 해시**로 저장됩니다. 평문 비밀번호는 서버 DB에 남기지 않습니다.
+- 관리자 로그인 세션은 HttpOnly/Secure/SameSite=Strict 쿠키를 사용하고 **8시간 후 만료**됩니다.
+- 한 접속처에서 5회 연속 틀리면 15분 제한됩니다.
+- 비밀번호 변경 시 다른 관리자 로그인 세션은 해제됩니다.
+- 비밀번호를 잊어버렸다면 Cloudflare D1 콘솔에서 관리자 계정 테이블만 초기화해 다시 설정할 수 있습니다. 해당 관리자 외에는 수행하지 마세요:
+
+```sql
+DELETE FROM admin_sessions;
+DELETE FROM admin_settings;
 ```
 
-**중요:** 키는 `.env`, `wrangler.jsonc`, GitHub 커밋, 화면 캡처에 올리지 마세요. 저장소에 기본 관리자 비밀번호는 포함하지 않았습니다. 이 키가 없으면 관리자 API는 열리지 않습니다.
+위 명령은 **학생 점수/플레이 데이터에 영향을 주지 않습니다.** 초기화 후 기존 Cloudflare `ADMIN_KEY`로 다시 첫 설정 화면을 진행합니다. `ADMIN_KEY` 자체를 잊었다면 Cloudflare에서 Secret을 새 값으로 수정하여 재배포하세요.
+
+중요: `ADMIN_KEY` 및 관리자 비밀번호를 GitHub, 코드, 채팅에 올리지 마세요.
 
 ## D. GitHub → Cloudflare 자동 배포
 
@@ -60,7 +77,7 @@ npx wrangler secret put ADMIN_KEY
 
 Cloudflare 공식 안내: https://developers.cloudflare.com/workers/ci-cd/builds/ 
 
-**관리자 Secret 주의:** 첫 배포 전에 `ADMIN_KEY`를 만들지 못했다면 첫 배포 후에 `npx wrangler secret put ADMIN_KEY` 실행하고 관리자 로그인을 확인하세요. 이후 GitHub 자동 재배포 시에도 비밀값이 유지되는지 설정을 확인하세요.
+**관리자 Secret 주의:** 최초 관리자 비밀번호 등록에만 `ADMIN_KEY`가 필요합니다. 웹사이트에서 비밀번호를 설정한 뒤에는 일반 비밀번호로 로그인하며, Secret은 서버에 보관합니다.
 
 ## E. 로컬 실행 및 자동 테스트
 
@@ -88,11 +105,11 @@ npm test
 | POST | `/api/game/start` | 인증된 게임 세션 생성 |
 | POST | `/api/game/finish` | 게임 기록 검증·저장 |
 | GET | `/api/rankings?game=ai-tower&mode=classic&period=all` | 게임별 랭킹 |
-| GET | `/api/admin/summary` | 관리자 통계 |
+| GET | `/api/admin/auth/status` | 관리자 비밀번호 설정 여부 및 로그인 상태 |\n| POST | `/api/admin/auth/setup` | 최초 관리자 비밀번호 등록 |\n| POST | `/api/admin/auth/login` | 관리자 로그인 |\n| POST | `/api/admin/auth/logout` | 관리자 로그아웃 |\n| POST | `/api/admin/auth/change-password` | 관리자 비밀번호 변경 |\n| GET | `/api/admin/summary` | 관리자 통계 |
 | GET | `/api/admin/scores` | 최근 점수 100개 |
 | DELETE | `/api/admin/scores/:id` | 비정상 기록 삭제 |
 
-인증된 참가자는 `Authorization: Bearer <token>` 헤더로 호출합니다. 관리자 API는 `X-Admin-Key: <ADMIN_KEY>` 헤더를 사용합니다.
+인증된 참가자는 `Authorization: Bearer <token>` 헤더로 호출합니다. 관리자 API는 로그인 후 발급되는 **HttpOnly 관리자 세션 쿠키**를 사용합니다. `X-Admin-Key` 헤더 인증은 지원하지 않습니다.
 
 ## 새 게임 등록 방법
 
