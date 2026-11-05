@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {Script} from 'node:vm';
 
 const html=readFileSync(new URL('../public/games/ai-rush/index.html',import.meta.url),'utf8');
-const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
+const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(m=>m[1]).filter(source=>source.trim().length>0);
 
 test('AI 러시 아케이드 화면에는 세로 계단·로봇·좌우 조작 버튼이 포함된다',()=>{
   assert.match(html,/<canvas id="scene"/);
