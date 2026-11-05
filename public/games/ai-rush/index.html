@@ -90,9 +90,9 @@ canvas{width:100%;height:100%;display:block;image-rendering:auto}
 <aside class="side">
   <span class="eyebrow">COLORFUL STEP CHALLENGE</span>
   <h1>AI <span>러시</span></h1>
-  <p class="desc">다음 계단을 보고 빠르게 방향을 선택하세요. 귀여운 AI 탐험가와 함께 끝없이 높이 올라가는 순발력 게임!</p>
-  <section class="card"><h2>조작 방법</h2><div class="keys"><div class="key">A / ← <small>왼쪽 계단</small></div><div class="key">D / → <small>오른쪽 계단</small></div><div class="key">터치 <small>모바일 좌우 버튼</small></div></div>
-  <p class="mini">잘못된 방향을 누르거나 제한 시간이 끝나면 게임 종료! 빠르게 선택하면 PERFECT +25점. <b>자유 도전</b>은 생존 기록, <b>오늘의 도전</b>은 45초 동안의 기록을 경쟁합니다.</p></section>
+  <p class="desc">오르기 버튼으로 현재 진행 방향을 따라 올라가세요. 계단이 꺾일 때에는 방향 전환! 두 버튼으로 최고 기록에 도전하세요.</p>
+  <section class="card"><h2>조작 방법</h2><div class="keys"><div class="key">A / ← <small>방향 전환 + 한 칸</small></div><div class="key">D / → <small>진행 방향으로 오르기</small></div><div class="key">터치 <small>하단 두 버튼</small></div></div>
+  <p class="mini">계단이 이어지면 오르기, 꺾이면 방향 전환! 두 버튼 모두 누르면 한 칸 올라갑니다. 계단을 벗어나거나 시간이 끝나면 게임 종료! 빠르게 누르면 PERFECT +25점. <b>자유 도전</b>은 생존 기록, <b>오늘의 도전</b>은 45초 동안의 기록을 경쟁합니다.</p></section>
   <section class="card"><h2>나의 기록</h2><div class="stat-grid"><div class="stat-card"><b id="localHigh">0</b><small>이 기기 최고 점수</small></div><div class="stat-card"><b id="localSteps">0</b><small>최다 계단</small></div></div></section>
   <section class="card"><div class="rank-head"><h2>온라인 TOP 5</h2><select id="rankFilter" aria-label="랭킹 기간"><option value="all">전체 기록</option><option value="today">오늘의 기록</option></select></div><ol id="ranks"><li class="muted">랭킹을 불러오는 중...</li></ol><p id="rankInfo" class="mini">모드별 최고 점수를 집계합니다.</p></section>
   <p class="mini">이 게임은 은평메디텍고등학교 스마트AI과에서 제작한 SMART AI GAME LAB 작품입니다. <a href="/">다른 게임 둘러보기</a></p>
@@ -104,7 +104,7 @@ canvas{width:100%;height:100%;display:block;image-rendering:auto}
     <div id="timerBar" class="timerline"></div>
     <div class="stage-info"><span class="pill" id="modePill">∞ 자유 도전</span><span class="pill" id="comboPill">COMBO 0</span></div>
     <div id="startOverlay" class="overlay">
-      <div class="sticker" aria-hidden="true">🤖</div><span class="eyebrow">READY TO CLIMB?</span><h2>AI 러시!</h2><p>왼쪽 계단은 A, 오른쪽 계단은 D!<br>스마트폰에서는 아래 버튼을 누르세요.</p>
+      <div class="sticker" aria-hidden="true">🤖</div><span class="eyebrow">READY TO CLIMB?</span><h2>AI 러시!</h2><p>오른쪽 <b>오르기</b>: 같은 방향으로 한 칸!<br>왼쪽 <b>방향 전환</b>: 뒤돌아 한 칸!</p>
       <label class="mini" for="nickname">닉네임 (2~12자)</label><input id="nickname" maxlength="12" value="AI 플레이어" autocomplete="nickname">
       <label class="mini" for="modeSelect">게임 모드</label><select id="modeSelect"><option value="classic">자유 도전 · 시간 제한</option><option value="daily">오늘의 도전 · 45초</option></select>
       <button id="startBtn" type="button" class="button">도전 시작!</button><p id="startMsg" role="status"></p>
@@ -118,8 +118,8 @@ canvas{width:100%;height:100%;display:block;image-rendering:auto}
       <button class="small" id="backBtn" type="button">메인으로</button>
     </div>
   </div>
-  <div class="control-row"><button class="control" id="leftBtn" aria-label="왼쪽 계단 A">← 왼쪽 A</button><button class="control" id="rightBtn" aria-label="오른쪽 계단 D">D 오른쪽 →</button></div>
-  <div class="under"><span class="mini">A·D로 방향 선택 · 스페이스 일시정지</span><div><button class="small" id="soundBtn" type="button">소리 켜짐</button> <button class="small" id="pauseBtn" type="button">일시정지</button></div></div>
+  <div class="control-row"><button class="control" id="leftBtn" aria-label="방향 전환 A">↶ 방향 전환 · A</button><button class="control" id="rightBtn" aria-label="오르기 D">오르기 · D ↗</button></div>
+  <div class="under"><span class="mini">A: 방향 전환 · D: 오르기 · 스페이스: 일시정지</span><div><button class="small" id="soundBtn" type="button">소리 켜짐</button> <button class="small" id="pauseBtn" type="button">일시정지</button></div></div>
 </section>
 </main>
 <script src="/shared/lab-sdk.js"></script>
@@ -131,7 +131,7 @@ const W=400,H=565;
 ctx.setTransform(2,0,0,2,0,0);
 const fmt=n=>n.toLocaleString('ko-KR'), clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 let state='idle',mode='classic',steps=0,perfects=0,combo=0,bestCombo=0,score=0;
-let stepLeft=3500,globalLeft=45000,anim=0,flash='',flashTime=0,lastTs=0,countdown=0,goal=[],session=null,soundOn=true,finishOnce=false,lastDirection=0,previousDirection=0,runClock=0,resumeState='playing',queuedDir=0;
+let stepLeft=3500,globalLeft=45000,anim=0,flash='',flashTime=0,lastTs=0,countdown=0,goal=[],session=null,soundOn=true,finishOnce=false,lastDirection=1,previousDirection=1,runClock=0,resumeState='playing',queuedAction='',heading=1,stairX=[0],cameraX=0,cameraStep=0;
 let lastNickname=localStorage.getItem('smartAI-rush-name')||'AI 플레이어';
 $('nickname').value=lastNickname;
 function localStats(){
@@ -159,11 +159,17 @@ function sequence(){
   function rnd(){seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return (seed>>>0)/4294967296;}
   const a=[];
   for(let i=0;i<520;i++){
-    let side=rnd()<.5?-1:1;
+    let side=i===0?1:(rnd()<.5?-1:1);
     if(side===prev){run++;if(run>3){side=-side;run=1;}}else{run=1;}
     prev=side;a.push(side);
   }
   return a;
+}
+function buildStairs(){
+  goal=sequence();
+  stairX=[0];
+  for(const dir of goal)stairX.push(stairX[stairX.length-1]+48*dir);
+  cameraX=0;cameraStep=0;
 }
 function overlay(id,on){$(id).hidden=!on;}
 function hud(){
@@ -183,8 +189,8 @@ function start(){
     $('startMsg').textContent='닉네임은 2~12자의 한글·영문·숫자로 입력하세요.';return;
   }
   localStorage.setItem('smartAI-rush-name',nickname);
-  lastNickname=nickname;mode=$('modeSelect').value;goal=sequence();steps=0;perfects=0;combo=0;bestCombo=0;score=0;
-  stepLeft=3500;globalLeft=45000;anim=0;flash='';flashTime=0;lastDirection=0;previousDirection=0;runClock=0;queuedDir=0;finishOnce=false;
+  lastNickname=nickname;mode=$('modeSelect').value;buildStairs();steps=0;perfects=0;combo=0;bestCombo=0;score=0;
+  stepLeft=3500;globalLeft=45000;anim=0;flash='';flashTime=0;lastDirection=1;previousDirection=1;heading=1;runClock=0;queuedAction='';finishOnce=false;
   $('modePill').textContent=mode==='daily'?'오늘의 도전 45초':'자유 도전';
   overlay('startOverlay',false);overlay('endOverlay',false);overlay('pauseOverlay',false);overlay('countOverlay',true);
   state='countdown';countdown=3000;hud();
@@ -193,17 +199,20 @@ function start(){
   session.catch(()=>{});
   loadRanks();beep(510,.08);
 }
-function move(dir){
+// 방향 전환은 방향만 바꾸는 버튼이 아니라, 반대 방향으로 한 계단 올라가는 동작입니다.
+function act(action){
   if(state!=='playing')return;
-  // 빠르게 연속 입력하더라도 다음 동작을 한 번 예약해 입력 누락을 줄입니다.
-  if(anim>0){queuedDir=dir;return;}
+  if(anim>0){queuedAction=action;return;}
+  const dir=action==='turn'?-heading:heading;
   if(dir!==goal[steps]){
-    flash='방향 실수!';flashTime=1.1;beep(180,.2);navigator.vibrate?.(80);finish('방향을 잘못 선택했어요');
-    return;
+    flash='계단 밖!';flashTime=1.1;beep(180,.2);navigator.vibrate?.(80);
+    finish('계단을 벗어났어요');return;
   }
   const elapsed=stepDuration()-stepLeft;
   const perfect=elapsed<=880;
-  previousDirection=lastDirection;steps++;lastDirection=dir;anim=.20;
+  previousDirection=heading;
+  heading=dir;
+  steps++;lastDirection=heading;anim=.18;
   if(perfect){perfects++;combo++;bestCombo=Math.max(combo,bestCombo);}
   else combo=0;
   score=steps*100+perfects*25;
@@ -254,7 +263,7 @@ function prism(x,y,w,level,kind){
   ctx.strokeStyle='#ffffff99';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x-w/2+12,y+5);ctx.lineTo(x+w/2-12,y+5);ctx.stroke();
   if(kind==='next'){
     ctx.fillStyle='#245b7e';ctx.font='900 21px system-ui';ctx.textAlign='center';
-    ctx.fillText(goal[steps]===-1?'← A':'D →',x,y+21);
+    ctx.fillText(goal[steps]!==heading?'↶ A':'D ↗',x,y+21);
   }else if(kind==='current'){
     ctx.fillStyle='#a97239';ctx.fillRect(x-24,y+10,48,5);
   }
@@ -301,40 +310,45 @@ function draw(ts){
   ctx.fillStyle='#fff0bb';ctx.beginPath();ctx.arc(322,119,52,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#fff7dd77';ctx.beginPath();ctx.arc(322,119,68,0,Math.PI*2);ctx.fill();
   cloud(69+(ts*.005)%25,110,.72);cloud(260-(ts*.004)%30,206,.9);cloud(95,286,.52);
-  // 배경 언덕과 게임 연구소 건물
   ctx.fillStyle='#76c7db';ctx.beginPath();ctx.moveTo(0,405);ctx.quadraticCurveTo(70,265,151,386);ctx.quadraticCurveTo(250,286,400,386);ctx.lineTo(400,565);ctx.lineTo(0,565);ctx.fill();
   ctx.fillStyle='#70accd';ctx.beginPath();ctx.moveTo(0,480);ctx.quadraticCurveTo(150,352,253,447);ctx.quadraticCurveTo(316,395,400,425);ctx.lineTo(400,565);ctx.lineTo(0,565);ctx.fill();
   ctx.fillStyle='#6f97bb';ctx.fillRect(12,315,56,134);ctx.fillRect(75,346,28,99);ctx.fillRect(303,320,55,132);
-  ctx.fillStyle='#c8ecf1';for(const [x,y] of [[22,332],[43,332],[22,357],[43,357],[85,355],[316,342],[340,342],[316,368],[340,368]]){
-    ctx.fillRect(x,y,9,12);
-  }
+  ctx.fillStyle='#c8ecf1';for(const [x,y] of [[22,332],[43,332],[22,357],[43,357],[85,355],[316,342],[340,342],[316,368],[340,368]])ctx.fillRect(x,y,9,12);
   ctx.fillStyle='#ebfaffaa';ctx.font='900 13px system-ui';ctx.textAlign='center';
   ctx.fillText('SMART AI · STEP LAB',200,61);
-  // 인접 계단들은 로봇 점프 동안 아래로 흐르며 상승하는 인상을 줍니다.
-  const p=anim>0?1-anim/.20:1;
-  for(let i=7;i>=-2;i--){
-    const idx=steps+i-1,side=idx<0?0:goal[Math.min(idx,goal.length-1)]||1;
-    const y=424-i*49-49*(1-p);
-    const x=200+side*(75-Math.max(0,i)*2);
-    const w=132-Math.max(0,i)*5;
-    prism(x,y,w,i,i===1?'next':i===0?'current':'regular');
+
+  // 계단 하나하나가 이어지는 실제 상승 경로. 꺾이는 지점에서만 방향 전환이 필요합니다.
+  // 캐릭터를 따라가는 카메라를 조금 늦게 움직여 점프 방향을 눈으로 볼 수 있습니다.
+  for(let idx=Math.min(stairX.length-1,steps+8);idx>=Math.max(0,steps-4);idx--){
+    const x=200+stairX[idx]-cameraX;
+    const y=430-(idx-cameraStep)*43;
+    const level=idx-steps;
+    const kind=idx===steps+1?'next':idx===steps?'current':'regular';
+    prism(x,y,112-Math.max(0,level)*3,level,kind);
+    if(kind==='next'){
+      ctx.fillStyle='#274b79';ctx.font='900 12px system-ui';ctx.textAlign='center';
+      ctx.fillText(goal[steps]!==heading?'방향 전환':'오르기',x,y+52);
+    }
   }
-  const prevX=200+previousDirection*75,nextX=200+lastDirection*75;
-  const x=prevX+(nextX-prevX)*p;
-  const bob=-35*Math.sin(Math.PI*p)+(state==='idle'?Math.sin(ts/420)*2:0);
-  robot(x,422+bob,Math.sin(Math.PI*p)*.08*(lastDirection||1));
-  const direction=goal[Math.min(steps,goal.length-1)]===-1?'왼쪽 ←':'→ 오른쪽';
-  ctx.fillStyle='#284c82';ctx.font='1000 24px system-ui';ctx.textAlign='center';
-  ctx.fillText('다음 계단  '+direction,200,151);
-  ctx.fillStyle='#ffffffd9';ctx.beginPath();ctx.roundRect(104,164,192,30,15);ctx.fill();
-  ctx.fillStyle='#4d6390';ctx.font='800 12px system-ui';
-  ctx.fillText('A / D  버튼으로 올라가기',200,184);
+  const p=anim>0?1-anim/.18:1;
+  const previous=Math.max(0,steps-1);
+  const isMoving=anim>0&&steps>0;
+  const worldX=isMoving?stairX[previous]+(stairX[steps]-stairX[previous])*p:stairX[steps];
+  const worldStep=isMoving?previous+p:steps;
+  const playerX=200+worldX-cameraX;
+  const playerY=440-(worldStep-cameraStep)*43-(isMoving?34*Math.sin(Math.PI*p):Math.sin(ts/400)*2);
+  robot(playerX,playerY,isMoving?Math.sin(Math.PI*p)*.08*heading:0);
+  const turn=goal[Math.min(steps,goal.length-1)]!==heading;
+  ctx.fillStyle='#284c82';ctx.font='1000 22px system-ui';ctx.textAlign='center';
+  ctx.fillText(turn?'다음 : 방향 전환 ↶':'다음 : 오르기 ↗',200,149);
+  ctx.fillStyle='#ffffffdf';ctx.beginPath();ctx.roundRect(92,164,216,30,15);ctx.fill();
+  ctx.fillStyle='#4d6390';ctx.font='850 12px system-ui';
+  ctx.fillText('A 방향 전환  |  D 오르기',200,184);
   if(flashTime>0){
     ctx.globalAlpha=Math.min(1,flashTime*2.5);
     ctx.fillStyle=flash.startsWith('PERFECT')?'#ffdc5f':'#ff7a99';
     ctx.strokeStyle='#355c91';ctx.lineWidth=5;ctx.font='1000 28px system-ui';
-    ctx.strokeText(flash,200,235);ctx.fillText(flash,200,235);
-    ctx.globalAlpha=1;
+    ctx.strokeText(flash,200,235);ctx.fillText(flash,200,235);ctx.globalAlpha=1;
   }
 }
 function loop(t){
@@ -346,8 +360,12 @@ function loop(t){
     stepLeft-=dt;runClock+=dt;if(mode==='daily')globalLeft-=dt;
     if(anim>0){
       anim=Math.max(0,anim-dt/1000);
-      if(anim===0 && queuedDir){const next=queuedDir;queuedDir=0;move(next);}
+      if(anim===0 && queuedAction){const next=queuedAction;queuedAction='';act(next);}
     }
+    // 이동 애니메이션 이후에도 부드럽게 카메라가 플레이어를 따라옵니다.
+    const tracking=Math.min(1,dt/155);
+    cameraX+=(stairX[steps]-cameraX)*tracking;
+    cameraStep+=(steps-cameraStep)*tracking;
     if(flashTime>0)flashTime-=dt/1000;
     if(stepLeft<=0 || (mode==='daily'&&globalLeft<=0))finish(mode==='daily'&&globalLeft<=0?'45초 도전 완료!':'시간 초과!');
     hud();
@@ -373,21 +391,21 @@ $('pauseBtn').onclick=pause;$('backBtn').onclick=()=>location.assign('/');
 $('soundBtn').onclick=()=>{soundOn=!soundOn;$('soundBtn').textContent=soundOn?'소리 켜짐':'소리 꺼짐';};
 $('rankFilter').onchange=loadRanks;
 $('shareBtn').onclick=async()=>{const text='AI 러시 '+fmt(score)+'점 · '+steps+'계단! SMART AI GAME LAB '+location.href;try{if(navigator.share)await navigator.share({title:'AI 러시 기록',text});else{await navigator.clipboard.writeText(text);$('onlineMsg').textContent='기록 문구를 복사했습니다.';}}catch{}};
-for(const [id,dir] of [['leftBtn',-1],['rightBtn',1]]){
-  $(id).addEventListener('pointerdown',e=>{e.preventDefault();move(dir);});
-  $(id).addEventListener('click',e=>{if(e.detail===0)move(dir);});
+for(const [id,action] of [['leftBtn','turn'],['rightBtn','climb']]){
+  $(id).addEventListener('pointerdown',e=>{e.preventDefault();act(action);});
+  $(id).addEventListener('click',e=>{if(e.detail===0)act(action);});
 }
 document.addEventListener('keydown',e=>{
   if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName))return;
   if(e.repeat)return;
   const key=e.key.toLowerCase();if(['a','arrowleft','d','arrowright',' '].includes(key))e.preventDefault();
-  if(key==='a'||key==='arrowleft')move(-1);
-  else if(key==='d'||key==='arrowright')move(1);
+  if(key==='a'||key==='arrowleft')act('turn');
+  else if(key==='d'||key==='arrowright')act('climb');
   else if(key===' ')pause();
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&(state==='playing'||state==='countdown'))pause();});
 $('modeSelect').addEventListener('change',()=>{mode=$('modeSelect').value;loadRanks();});
-requestAnimationFrame(loop);loadRanks();hud();
+buildStairs();requestAnimationFrame(loop);loadRanks();hud();
 })();
 </script>
 </body></html>
