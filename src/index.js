@@ -31,18 +31,17 @@ async function rankings(db, query) {
   const game = query.get('game') || 'ai-tower';
   const mode = query.get('mode') || 'classic';
   const period = query.get('period') || 'all';
-  if (!liveGame(game) || !MODES.includes(mode) || !['all', 'today'].includes(period)) return fail('올바르지 않은 랭킹 조건입니다.');
+  const view = query.get('view') || 'best';
+  if (!liveGame(game) || !MODES.includes(mode) || !['all', 'today'].includes(period) ||
+      !['best','all'].includes(view)) return fail('올바르지 않은 랭킹 조건입니다.');
   if (!(await visibleGame(db,game))) return fail('비공개 게임입니다.',404);
   const cutoff = period === 'today' || mode === 'daily' ? kstStartUtc() : '1970-01-01T00:00:00.000Z';
-  const stmt = db.prepare(`WITH ranked AS (
-    SELECT s.player_id, p.nickname, s.score, s.floors, s.created_at,
-      ROW_NUMBER() OVER (PARTITION BY s.player_id ORDER BY s.score DESC, s.floors DESC, s.created_at ASC) AS rn
-    FROM scores s JOIN players p ON p.id = s.player_id
-    WHERE s.game_id = ? AND s.mode = ? AND s.created_at >= ?
-  ) SELECT nickname, score, floors, created_at FROM ranked WHERE rn = 1
-    ORDER BY score DESC, floors DESC, created_at ASC LIMIT 20`);
-  const result = await stmt.bind(game, mode, cutoff).all();
-  return reply({ game, mode, period, rankings: (result.results || []).map((r, i) => ({ rank: i + 1, ...r })) });
+  const select = 'SELECT s.player_id, COALESCE(s.nickname, p.nickname) AS nickname, s.score, s.floors, s.created_at FROM scores s JOIN players p ON p.id = s.player_id WHERE s.game_id = ? AND s.mode = ? AND s.created_at >= ?';
+  const sql = view === 'all'
+    ? 'SELECT nickname,score,floors,created_at FROM ('+select+') ORDER BY score DESC, floors DESC, created_at ASC LIMIT 20'
+    : 'WITH records AS ('+select+'), ranked AS (SELECT player_id,nickname,score,floors,created_at,ROW_NUMBER() OVER (PARTITION BY player_id ORDER BY score DESC, floors DESC, created_at ASC) AS rn FROM records) SELECT nickname,score,floors,created_at FROM ranked WHERE rn=1 ORDER BY score DESC, floors DESC, created_at ASC LIMIT 20';
+  const result = await db.prepare(sql).bind(game,mode,cutoff).all();
+  return reply({ game, mode, period, view, rankings: (result.results || []).map((r,i)=>({rank:i+1,...r})) });
 }
 async function api(req, env) {
   if (!env.DB) return fail('D1 데이터베이스 연결이 필요합니다. 배포 설정을 확인하세요.', 503);
@@ -73,6 +72,7 @@ async function api(req, env) {
     if (!player) return fail('로그인이 필요합니다.', 401);
     const data = await bodyJson(req), nickname = validName(data.nickname);
     if (!nickname) return fail('올바른 닉네임을 입력하세요.');
+    // 과거 점수의 닉네임은 scores.nickname 스냅샷으로 보존합니다.
     await env.DB.prepare('UPDATE players SET nickname = ? WHERE id = ?').bind(nickname, player.id).run();
     return reply({ player: { ...player, nickname } });
   }
@@ -106,8 +106,8 @@ async function api(req, env) {
     // 한 번 제출된 세션은 원자적으로 완료 처리하며 중복 요청을 방지합니다.
     const updated = await env.DB.prepare('UPDATE game_sessions SET finished_at = ? WHERE id = ? AND player_id = ? AND finished_at IS NULL').bind(Date.now(), session.id, player.id).run();
     if (updated.meta?.changes !== 1) return fail('이미 제출된 기록입니다.', 409);
-    await env.DB.prepare('INSERT INTO scores (id, session_id, player_id, game_id, mode, score, floors, perfects, combo, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      .bind(scoreId, session.id, player.id, session.game_id, session.mode, score, floors, perfects, combo, created).run();
+    await env.DB.prepare('INSERT INTO scores (id, session_id, player_id, game_id, mode, score, floors, perfects, combo, created_at, nickname) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(scoreId, session.id, player.id, session.game_id, session.mode, score, floors, perfects, combo, created, player.nickname).run();
     return reply({ ok: true, score: { id: scoreId, score, floors, created_at: created } }, 201);
   }
   if (path.startsWith('/api/admin/auth/')) return adminAuthRoute(req, env, path);
@@ -132,7 +132,7 @@ async function api(req, env) {
       return reply({ players: players?.n || 0, scores: scores?.n || 0, sessions: sessions?.n || 0 });
     }
     if (path === '/api/admin/scores' && method === 'GET') {
-      const list = await env.DB.prepare('SELECT s.id, p.nickname, s.game_id, s.mode, s.score, s.floors, s.created_at FROM scores s JOIN players p ON p.id = s.player_id ORDER BY s.created_at DESC LIMIT 100').all();
+      const list = await env.DB.prepare('SELECT s.id, COALESCE(s.nickname,p.nickname) AS nickname, s.game_id, s.mode, s.score, s.floors, s.created_at FROM scores s JOIN players p ON p.id = s.player_id ORDER BY s.created_at DESC LIMIT 100').all();
       return reply({ scores: list.results || [] });
     }
     const match = path.match(/^\/api\/admin\/scores\/([0-9a-f-]{36})$/);
