@@ -88,10 +88,19 @@ async function fly(tier,from,to,ms,hideOriginal=false){
     if(time){
       const dx=(to.col-from.col)*$('board').clientWidth/COLS;
       const dy=(to.row-from.row)*$('board').clientHeight/ROWS;
-      const animation=holder.animate([
-        {transform:'translate(0px,0px) scale(.91)',opacity:1},
-        {transform:'translate('+dx+'px,'+dy+'px) scale(1.1)',opacity:1}
-      ],{duration:time,easing:'cubic-bezier(.23,.62,.36,1)',fill:'forwards'});
+      const falling=from.row<0;
+      const frames=falling?[
+        {offset:0,transform:'translate(0px,0px) scale(.87)',opacity:.65},
+        {offset:.75,transform:'translate('+dx+'px,'+(dy+7)+'px) scale(1.08,.9)',opacity:1},
+        {offset:.88,transform:'translate('+dx+'px,'+(dy-4)+'px) scale(.96,1.05)',opacity:1},
+        {offset:1,transform:'translate('+dx+'px,'+dy+'px) scale(1)',opacity:1}
+      ]:[
+        {transform:'translate(0px,0px) scale(.98)',opacity:1},
+        {transform:'translate('+dx+'px,'+dy+'px) scale(1.12)',opacity:.86}
+      ];
+      const animation=holder.animate(frames,{
+        duration:time,easing:falling?'cubic-bezier(.34,.02,.65,1)':'ease-in-out',fill:'forwards'
+      });
       await animation.finished.catch(()=>{});
     }
   }finally{holder.remove();}
