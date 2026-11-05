@@ -2,6 +2,7 @@ import {COLS,ROWS,MAX_TURNS,createMergeGame,dropMergeRobot,mergeScoreSummary,pee
 const $=id=>document.getElementById(id);
 const names=['','새싹봇','번개봇','꿈틀봇','스타봇','그린봇','갤럭시봇','파이어봇','아쿠아봇','레전드봇'];
 const colors=['','#73e9de','#9cb3ff','#ffb2d0','#ffd47d','#a8e9a3','#c9aaff','#ffa18d','#8fe1ff','#ffed9e'];
+const symbols=['','✦','ϟ','◎','★','❀','✧','▲','≈','♛'];
 const fmt=n=>Number(n).toLocaleString('ko-KR');
 const localKey=m=>'smart-ai-merge-high-'+m;
 let state=null,selected=2,session=null,playing=false,soundEnabled=true,mode='classic',saveBusy=false,audio=null,toastTimer=0;
@@ -29,7 +30,8 @@ function bot(tier,animate=false){
   const face=document.createElement('span');face.className='face';
   const mouth=document.createElement('i');mouth.className='mouth';face.append(mouth);
   const label=document.createElement('span');label.className='tier';label.textContent='Lv.'+tier;
-  b.append(face,label);return b;
+  const symbol=document.createElement('span');symbol.className='bot-symbol';symbol.textContent=symbols[tier];symbol.setAttribute('aria-hidden','true');
+  b.append(face,symbol,label);return b;
 }
 function renderGrid(grid){
   const root=$('grid'),fragment=document.createDocumentFragment();
