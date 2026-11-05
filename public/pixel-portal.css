@@ -1,0 +1,197 @@
+/* SMART AI GAME LAB — original pixel arcade portal theme.
+   Uses the locally hosted illustration /portal-city.svg, without external fonts/assets. */
+:root{--bg:#0a1738;--panel:#142d5c;--panel2:#1c3a73;--line:#729ee46b;--txt:#f6faff;--muted:#bfcee9;--mint:#74f4ed;--lav:#a99eff;color-scheme:dark}
+html{scroll-padding-top:20px}
+body.pixel-portal{background:#081735;color:#f7fcff;font-family:'Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif;overflow-x:hidden}
+.pixel-portal h1,.pixel-portal h2,.pixel-portal h3{font-weight:1000}
+.pixel-portal a:focus-visible,.pixel-portal button:focus-visible,.pixel-portal select:focus-visible{outline:3px solid #fff6a0;outline-offset:4px}
+.skip-link{position:absolute;top:-100px;left:8px;z-index:99;padding:14px;background:#fff7b3;color:#1b2a59;font-weight:900}
+.skip-link:focus{top:8px}
+.pixel-portal .container{width:min(1180px,calc(100% - 42px));margin-inline:auto}
+.pixel-portal .site-header{
+  position:absolute;z-index:31;top:0;left:0;width:100%;height:81px;padding:0 max(24px,calc((100% - 1180px)/2));
+  border-bottom:2px solid #d7edff38;gap:19px;
+  background:linear-gradient(180deg,#0d2a67de,#122f67a6 78%,transparent);backdrop-filter:blur(5px)
+}
+.pixel-portal .identity-icon{width:46px;height:46px;border:3px solid #80faff;border-radius:7px;background:#1b63b4;color:#fff;font-size:17px;box-shadow:4px 4px 0 #061d5c,inset 0 0 0 3px #4d99d6;text-shadow:2px 2px #11386b}
+.pixel-portal .identity strong{color:#fff8d4;font-size:17px;letter-spacing:.03em;text-shadow:2px 2px #1f3a7f}
+.pixel-portal .identity small{color:#b9fbff;font-size:10px;letter-spacing:.2em}
+.pixel-portal .top-nav{gap:25px;color:#f3f9ff;font-size:13px;text-shadow:1px 2px #17366c}
+.pixel-portal .top-nav a:hover{color:#ffdc72}
+.pixel-portal .head-link{border:2px solid #a3e9ff;color:white;background:#132d76ca;box-shadow:0 4px #092052;padding:9px 14px;border-radius:8px;font-weight:900}
+.pixel-portal .hero{
+  width:100%;max-width:none;min-height:790px;min-height:max(740px,100svh);
+  position:relative;display:block;margin:0;padding:0;overflow:hidden;isolation:isolate;
+  background:#2679d8;box-shadow:inset 0 -12px 0 #091d46
+}
+.pixel-portal .hero-scene{position:absolute;inset:0;z-index:-3;
+  background:linear-gradient(180deg,#185bc52b 0%,transparent 39%,#132d6233 64%,#071b3bb8 100%),url('/portal-city.svg') center center / cover no-repeat}
+.pixel-portal .hero-scanlines{position:absolute;inset:0;z-index:-2;pointer-events:none;opacity:.23;
+  background-image:repeating-linear-gradient(90deg,transparent 0 5px,#ffffff28 5px 6px),
+    repeating-linear-gradient(0deg,#081f480a 0 2px,transparent 2px 5px);mix-blend-mode:overlay}
+.pixel-portal .hero-content{position:relative;min-height:inherit;max-width:1300px;display:flex;flex-direction:column;align-items:center;padding:118px 16px 66px}
+.pixel-portal .hero-heading{position:relative;text-align:center;z-index:3}
+.pixel-portal .hero-arcade-chip{display:inline-block;padding:7px 20px;border:2px solid #a7f9ff;background:#172b79e8;color:#e2ffff;font-size:clamp(9px,1vw,12px);font-weight:1000;letter-spacing:.15em;box-shadow:0 4px #0d2f6b,0 0 14px #9ae8ff88;text-shadow:1px 2px #1d4083}
+.pixel-portal .hero h1{display:grid;gap:0;margin:16px 0 8px;line-height:.94;font-family:system-ui,'Malgun Gothic',sans-serif;letter-spacing:-.085em;filter:drop-shadow(0 6px 0 #091d57)}
+.pixel-portal .hero h1 .title-smart{font-size:clamp(58px,8.7vw,134px);display:block;color:#e4ffff;-webkit-text-stroke:3px #153f96;
+  text-shadow:4px 4px 0 #00bfe6,7px 8px 0 #20398d,10px 11px 0 #152a69,0 0 24px #fff6c8}
+.pixel-portal .hero h1 .title-lab{font-size:clamp(64px,10.3vw,152px);display:block;color:#ffe878;-webkit-text-stroke:3px #593d92;
+  text-shadow:4px 4px 0 #ed9c35,8px 8px 0 #482e83,11px 12px 0 #162a6f,0 0 22px #f6c95c}
+.pixel-portal .hero-slogan{display:inline-block;margin:7px 0 5px;padding:9px 24px;border:3px solid #7cf4ff;
+  background:linear-gradient(90deg,#152364f6,#2546a1f2,#162466f6);box-shadow:0 6px 0 #10234b,0 0 22px #4deaff7f;
+  color:#fff;font-weight:1000;font-size:clamp(17px,2.7vw,34px);text-shadow:2px 3px #1c397f}
+.pixel-portal .hero-slogan strong{color:#ffeb82}
+.pixel-portal .hero-caption{margin:13px 0 0;font-weight:950;font-size:clamp(12px,1.5vw,18px);color:#f3faff;
+  text-shadow:0 2px 0 #274284,1px 3px 7px #112d55}
+.pixel-portal .hero-game-stickers{position:absolute;top:47%;left:0;right:0;z-index:1;display:flex;justify-content:space-between;pointer-events:none}
+.pixel-portal .hero-game-stickers .sticker{border:3px solid #f1ffff;box-shadow:5px 6px 0 #15396a;background:#1858a9ed;transform:rotate(-7deg);display:grid;place-items:center;gap:2px;
+  min-width:92px;padding:7px 10px;color:#feef8b;font-size:30px;font-weight:900;text-shadow:2px 2px #122d65;clip-path:polygon(8% 0,100% 0,100% 85%,92% 100%,0 100%,0 16%)}
+.pixel-portal .hero-game-stickers .sticker b{color:#f8ffff;font-size:10px;letter-spacing:.12em}
+.pixel-portal .hero-game-stickers .sticker-rush{align-self:flex-start;transform:translateY(90px) rotate(7deg);background:#643ab0ee}
+.pixel-portal .hero-game-stickers .sticker-merge{transform:rotate(5deg);background:#d36d39e8}
+.pixel-portal .hero-bottom{position:relative;z-index:3;margin-top:auto;width:min(690px,100%);display:grid;justify-items:center;gap:18px}
+.pixel-portal .hero-actions{width:min(570px,100%);display:grid;gap:12px}
+.pixel-portal .hero-sub-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pixel-portal .pixel-action{display:flex;align-items:center;justify-content:center;gap:18px;min-height:54px;white-space:nowrap;padding:13px 22px;
+  font-weight:1000;font-size:clamp(16px,2vw,24px);color:#fff;text-shadow:0 2px #17356f;
+  border:3px solid #e4ffff;border-bottom-width:6px;border-radius:10px;
+  background:linear-gradient(#66e5ff,#3281e6 65%,#205dc0);box-shadow:0 7px 0 #123882,0 14px 14px #09205688;
+  transition:transform .12s,filter .12s}
+.pixel-portal .pixel-action:hover{filter:brightness(1.12);transform:translateY(-2px)}
+.pixel-portal .pixel-action:active{transform:translateY(5px);box-shadow:0 2px 0 #123882}
+.pixel-portal .start-action{min-height:82px;font-size:clamp(26px,4.3vw,51px);letter-spacing:-.06em;border:4px solid #fff8b8;border-bottom:9px solid #cf8b2a;
+  color:#282746;text-shadow:0 2px #fff2a9;background:linear-gradient(180deg,#fffeae 0%,#ffdf59 46%,#ffb532 78%,#f89a18);box-shadow:0 8px #a25b1c,0 17px 20px #09205688}
+.pixel-portal .rank-action{background:linear-gradient(#63ebff,#2e99ee 60%,#1868ca);border-color:#d9fbff;border-bottom-color:#1354a3}
+.pixel-portal .games-action{background:linear-gradient(#d8acff,#a56be9 64%,#7f41ca);border-color:#f2e1ff;border-bottom-color:#653ba2}
+.pixel-portal .hero-data{margin:0;width:100%;justify-content:space-between;gap:7px;padding:13px 19px;border:2px solid #8bcdff9e;background:#102d69e6;box-shadow:0 4px 0 #091e53}
+.pixel-portal .hero-data>div{text-align:center;flex:1}
+.pixel-portal .hero-data b{font-size:clamp(20px,2.4vw,29px);color:#fff4be;text-shadow:2px 2px #2b4d8c}
+.pixel-portal .hero-data small{font-size:10px;color:#d1edff;white-space:nowrap}
+.pixel-portal .hero-data i{background:#8eb8ec66;height:26px}
+.pixel-portal .hero-school{position:absolute;left:24px;bottom:20px;z-index:4;background:#142d69d9;border:2px solid #a0eaff;box-shadow:0 4px #123267;padding:7px 17px;color:#edfaff;font-weight:950;font-size:12px}
+.pixel-portal .hero-school strong{color:#fff29b}
+.pixel-portal .hero-scroll{position:absolute;right:24px;bottom:20px;z-index:4;color:#eaffff;background:#163571aa;border:2px solid #9cdbff99;padding:7px 12px;font-size:10px;font-weight:900;letter-spacing:.1em;animation:pixelBob 2.3s ease-in-out infinite}
+.pixel-portal .hero-sparks i{position:absolute;z-index:-1;width:8px;height:8px;opacity:.85;background:#fff59c;box-shadow:8px 0 #fff59c,0 8px #fff59c,8px 8px #fff59c;animation:pixelGlow 3s ease-in-out infinite}
+.pixel-portal .hero-sparks i:nth-child(1){top:29%;left:11%}
+.pixel-portal .hero-sparks i:nth-child(2){top:50%;left:16%;animation-delay:-1s}
+.pixel-portal .hero-sparks i:nth-child(3){top:23%;right:12%;animation-delay:-1.8s}
+.pixel-portal .hero-sparks i:nth-child(4){top:60%;right:9%;animation-delay:-2.4s}
+.pixel-portal .hero-sparks i:nth-child(5){top:74%;left:11%;animation-delay:-.8s}
+.pixel-portal .hero-sparks i:nth-child(6){top:70%;right:22%;animation-delay:-2s}
+@keyframes pixelGlow{0%,100%{opacity:.2;transform:scale(.7) rotate(0)}50%{opacity:1;transform:scale(1.35) rotate(15deg)}}
+@keyframes pixelBob{50%{transform:translateY(4px)}}
+/* The arcade extends beyond the landing screen. */
+.pixel-portal #games{scroll-margin-top:25px}
+.pixel-portal #ranking{scroll-margin-top:22px}
+.pixel-portal .section{padding:70px 0 35px}
+.pixel-portal .section-heading{margin-bottom:28px}
+.pixel-portal .section-kicker{color:#78eafa;font-weight:1000;letter-spacing:.13em;font-size:11px}
+.pixel-portal .section-heading h2,.pixel-portal .story-section h2{font-size:clamp(27px,3.5vw,41px);color:#fff7b0;text-shadow:3px 4px #142e74}
+.pixel-portal .section-heading p{color:#b8d2ed;font-size:13px}
+.pixel-portal .game-grid{gap:21px}
+.pixel-portal .game-card{background:linear-gradient(160deg,#173a70,#142958);border:3px solid #689fe0;border-bottom:8px solid #335ca3;border-radius:16px;box-shadow:0 11px 0 #091c3d,0 20px 27px #020c2655;transition:transform .16s}
+.pixel-portal .game-card.live{border-color:#82d6f5;box-shadow:0 11px 0 #143d6f,0 20px 28px #020c268c}
+.pixel-portal .game-card:hover{transform:translateY(-5px)}
+.pixel-portal .game-art{height:205px;border-bottom:3px solid #9dd7ff99}
+.pixel-portal .game-art:after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,#ffffff09 0 1px,transparent 1px 7px),
+  repeating-linear-gradient(0deg,#08133c15 0 1px,transparent 1px 7px)}
+.pixel-portal .tower-art{background:radial-gradient(circle at 50% 70%,#8589ef,#3646af 63%,#1b3071)}
+.pixel-portal .rush-art{background:linear-gradient(180deg,#70cfff,#4b8fda 58%,#324fc4)}
+.pixel-portal .merge-art{background:linear-gradient(150deg,#a1b8ff,#786ad0 63%,#3c3a93)}
+.pixel-portal .merge-bots span{border-radius:13px;box-shadow:5px 6px 0 #1e386b;border-color:#e2f7ff}
+.pixel-portal .art-bubble{border-radius:5px;border:2px solid #f9ffff;padding:8px 10px;background:#ffea84;color:#2f3566;box-shadow:3px 4px #203765}
+.pixel-portal .game-number{color:#8ff7ec}
+.pixel-portal .game-meta{padding:23px}
+.pixel-portal .game-meta h3{color:#fff7be;font-size:25px}
+.pixel-portal .game-meta p{color:#c4d5f1}
+.pixel-portal .tags span{border:1px solid #6a8bc2;border-radius:5px;background:#254779;color:#cbeaff}
+.pixel-portal .game-go{background:linear-gradient(#fff3a1,#ffcb53);border:2px solid #fffac9;border-bottom:5px solid #ba7a25;border-radius:9px;color:#27345d;box-shadow:0 3px #102b59}
+.pixel-portal .game-go:hover{filter:brightness(1.07)}
+.pixel-portal .ranking-section{padding-top:87px}
+.pixel-portal .ranking-card{border:3px solid #6aabdf;border-bottom:7px solid #386aaa;border-radius:16px;background:#152e5b;box-shadow:0 11px #081b3c}
+.pixel-portal .ranking-bar{background:linear-gradient(100deg,#24579f,#243c7c);border-bottom:3px solid #74a8da}
+.pixel-portal .trophy{background:#ffcd72;color:#253a6b;border:3px solid #fff1a0;border-radius:7px;font-size:27px;box-shadow:3px 4px #15336e}
+.pixel-portal .ranking-heading strong{font-size:19px;color:#fff5bc}
+.pixel-portal .ranking-heading small{color:#c2d9f6}
+.pixel-portal .ranking-filters select{border:2px solid #78a9d8;border-radius:7px;color:#f9fbff;background:#163269;min-height:40px}
+.pixel-portal .ranking-list li{border-bottom:1px dashed #679ed055;min-height:57px}
+.pixel-portal .ranking-list .rank-number{border:1px solid #7a9dd0;border-radius:4px;background:#1c477f}
+.pixel-portal .ranking-list li:first-child .rank-number{border-color:#f9d682;background:#7d5b31;color:#ffe9a6}
+.pixel-portal .rank-name{color:#e8f6ff}
+.pixel-portal .rank-score{color:#ffedaf}
+.pixel-portal .ranking-foot{background:#10244a;color:#aaccec}
+.pixel-portal .ranking-foot button{border:2px solid #8edfff;border-radius:6px;background:#255695;color:#fff;font-weight:900}
+.pixel-portal .story-section{background:linear-gradient(135deg,#203c80,#142957);border:3px solid #729ee6;border-bottom:8px solid #315ba6;border-radius:16px;box-shadow:0 10px #071a39}
+.pixel-portal .story-icon{border:3px solid #84efff;border-radius:9px;background:#3069ac;color:#fff7a9;box-shadow:5px 5px #113973}
+.pixel-portal .story-section p{color:#c9dafa}
+.pixel-portal .story-steps span{background:#2c518f;border:2px solid #638fca;border-radius:6px;color:#f0f8ff;font-weight:750}
+.pixel-portal .site-footer{background:#07132d;border-top:3px solid #2a548b}
+.pixel-portal .footer-inner{color:#a7c9ed}
+.pixel-portal .footer-inner b{color:#fff6a4}
+@media(max-width:950px){
+ .pixel-portal .top-nav{gap:12px}
+ .pixel-portal .hero-game-stickers{display:none}
+ .pixel-portal .hero h1 .title-smart{font-size:clamp(48px,9vw,93px)}
+ .pixel-portal .hero h1 .title-lab{font-size:clamp(58px,11vw,111px)}
+}
+@media(max-width:690px){
+ .pixel-portal .site-header{height:66px;padding:0 13px;gap:9px}
+ .pixel-portal .identity-icon{height:38px;width:38px;border-width:2px;box-shadow:3px 3px #0a1d4e}
+ .pixel-portal .identity strong{font-size:12px}
+ .pixel-portal .identity small{font-size:9px}
+ .pixel-portal .top-nav{display:none}
+ .pixel-portal .head-link{font-size:10px;padding:7px 9px;border-width:1px}
+ .pixel-portal .container{width:calc(100% - 28px)}
+ .pixel-portal .hero{min-height:max(660px,100svh)}
+ .pixel-portal .hero-scene{background-position:center 42%;background-size:auto 100%}
+ .pixel-portal .hero-content{padding:93px 0 71px}
+ .pixel-portal .hero-arcade-chip{font-size:9px;letter-spacing:.035em;padding:6px 9px}
+ .pixel-portal .hero h1{margin-top:20px;margin-bottom:12px}
+ .pixel-portal .hero h1 .title-smart{font-size:clamp(46px,11vw,75px);-webkit-text-stroke:2px #143b8b;text-shadow:2px 3px 0 #09b6dc,5px 5px 0 #1f387f}
+ .pixel-portal .hero h1 .title-lab{font-size:clamp(55px,13vw,89px);-webkit-text-stroke:2px #593d92;text-shadow:3px 3px 0 #dc9b39,5px 6px 0 #48317c}
+ .pixel-portal .hero-slogan{font-size:clamp(16px,4.5vw,24px);padding:6px 12px;border-width:2px}
+ .pixel-portal .hero-caption{font-size:12px;margin-top:10px}
+ .pixel-portal .hero-bottom{width:min(440px,100%);gap:12px}
+ .pixel-portal .hero-actions{gap:10px}
+ .pixel-portal .start-action{min-height:69px;font-size:clamp(26px,7vw,36px);padding:9px 10px}
+ .pixel-portal .pixel-action{font-size:16px;min-height:51px;padding:9px}
+ .pixel-portal .hero-sub-actions{gap:9px}
+ .pixel-portal .hero-data{padding:10px 8px}
+ .pixel-portal .hero-data b{font-size:20px}
+ .pixel-portal .hero-data small{font-size:9px}
+ .pixel-portal .hero-school{left:13px;bottom:15px;font-size:10px;padding:6px 8px}
+ .pixel-portal .hero-scroll{right:11px;bottom:15px;padding:6px;font-size:8px}
+ .pixel-portal .section{padding-top:43px}
+ .pixel-portal .game-grid{grid-template-columns:1fr}
+ .pixel-portal .game-art{height:186px}
+ .pixel-portal .section-heading h2{font-size:28px}
+ .pixel-portal .ranking-section{padding-top:63px}
+ .pixel-portal .ranking-bar{padding:16px;flex-direction:column;align-items:stretch}
+ .pixel-portal .ranking-filters{justify-content:flex-start}
+ .pixel-portal .ranking-filters select{flex:1 1 calc(50% - 10px);max-width:none}
+ .pixel-portal .story-section{padding:24px}
+ .pixel-portal .footer-inner{flex-direction:column}
+}
+@media(min-width:691px) and (max-width:1000px){.pixel-portal .game-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-height:730px) and (min-width:691px){
+ .pixel-portal .hero{min-height:680px}
+ .pixel-portal .hero-content{padding-top:90px;padding-bottom:50px}
+ .pixel-portal .hero h1 .title-smart{font-size:clamp(52px,7vw,83px)}
+ .pixel-portal .hero h1 .title-lab{font-size:clamp(59px,8.5vw,100px)}
+ .pixel-portal .hero-slogan{font-size:20px}
+ .pixel-portal .hero-actions{gap:8px}
+ .pixel-portal .start-action{min-height:64px;font-size:32px}
+}
+@media(max-height:630px) and (max-width:690px){
+ .pixel-portal .hero{min-height:640px}
+ .pixel-portal .hero-content{padding-top:79px;padding-bottom:60px}
+ .pixel-portal .hero h1{margin:11px 0 6px}
+ .pixel-portal .hero h1 .title-smart{font-size:48px}
+ .pixel-portal .hero h1 .title-lab{font-size:55px}
+ .pixel-portal .hero-slogan{font-size:16px}
+ .pixel-portal .hero-caption{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+ .pixel-portal .hero-sparks i,.pixel-portal .hero-scroll{animation:none}
+ .pixel-portal .pixel-action,.pixel-portal .game-card{transition:none}
+}
