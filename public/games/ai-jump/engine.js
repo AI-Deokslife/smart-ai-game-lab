@@ -81,6 +81,8 @@ function loseHeart(state,reason){
   state.jumpBuffer=0;
   state.invulnerable=45;
   state.combo=0;
+  state.cameraX=Math.max(0,state.x-WIDTH*.35);
+  state.cameraY=Math.max(0,state.y-230);
   return false;
 }
 function droneCollision(state,p){
